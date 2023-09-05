@@ -1,5 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
+use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
 use syn::Result;
 
@@ -10,16 +11,16 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let mut func: syn::ItemFn = syn::parse2(item)?;
     let args: Args = syn::parse2(attr)?;
 
-    let krate = match args.crate_ {
-        Some(krate) => krate.value,
+    let krate = match &args.crate_ {
+        Some(krate) => krate.value.clone(),
         None => syn::parse_quote!(::fauxgen),
     };
-    let mut yield_ty = match args.yield_ {
-        Some(ty) => ty.value,
+    let mut yield_ty = match &args.yield_ {
+        Some(ty) => ty.value.clone(),
         None => syn::parse_quote!(()),
     };
-    let mut arg_ty = match args.arg {
-        Some(ty) => ty.value,
+    let mut arg_ty = match &args.arg {
+        Some(ty) => ty.value.clone(),
         None => syn::parse_quote!(()),
     };
     let mut return_ty = match std::mem::replace(&mut func.sig.output, syn::ReturnType::Default) {
@@ -47,6 +48,24 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
     let block = func.block;
 
+    let yield_macro_span = args
+        .yield_
+        .as_ref()
+        .map(|arg| arg.span())
+        .unwrap_or(Span::call_site());
+    let yield_macro_body = quote::quote_spanned! {
+        yield_macro_span => #token.yield_($value).await
+    };
+
+    let argument_macro_span = args
+        .arg
+        .as_ref()
+        .map(|arg| arg.span())
+        .unwrap_or(Span::call_site());
+    let argument_macro_body = quote::quote_spanned! {
+        argument_macro_span => #token.argument().await
+    };
+
     let prelude = quote::quote! {
         let #token = #krate::__private::token::<#yield_ty, #arg_ty>();
         let #token = #krate::__private::pin!(#token);
@@ -57,13 +76,13 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         /// Yield a value from this generator.
         #[allow(unused_macros)]
         macro_rules! #yield_ident {
-            ($value:expr) => { #token.yield_($value).await }
+            ($value:expr) => { #yield_macro_body }
         }
 
         /// Argument passed into the generator before the first yield.
         #[allow(unused_macros)]
         macro_rules! #argument_ident {
-            () => { #token.argument().await }
+            () => { #argument_macro_body }
         }
     };
 

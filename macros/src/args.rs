@@ -1,3 +1,4 @@
+use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 
@@ -14,6 +15,14 @@ impl<K: Parse, V: Parse> Parse for MacroArg<K, V> {
             eq_token: input.parse()?,
             value: input.parse()?,
         })
+    }
+}
+
+impl<K: ToTokens, V: ToTokens> ToTokens for MacroArg<K, V> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.key.to_tokens(tokens);
+        self.eq_token.to_tokens(tokens);
+        self.value.to_tokens(tokens)
     }
 }
 
