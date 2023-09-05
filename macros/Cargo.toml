@@ -3,6 +3,7 @@ name = "fauxgen-macros"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+authors = [ "Sean Lynch <sean@lynches.ca>" ]
 description   = "macro support package for fauxgen"
 documentation = "https://docs.rs/fauxgen"
 repository    = "https://github.com/phantomical/fauxgen"
