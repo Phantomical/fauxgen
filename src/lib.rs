@@ -19,6 +19,14 @@ mod token;
 
 pub mod export;
 
+pub use fauxgen_macros::generator;
+
+pub use crate::asynk::{AsyncGenerator, Resume};
+pub use crate::core::{Generator, GeneratorState};
+pub use crate::iter::GeneratorIter;
+pub use crate::stream::GeneratorStream;
+pub use crate::token::GeneratorToken;
+
 #[doc(hidden)]
 pub mod __private {
     use std::pin::Pin;
@@ -56,11 +64,3 @@ pub mod __private {
         }
     }
 }
-
-pub use fauxgen_macros::generator;
-
-pub use crate::asynk::{AsyncGenerator, Resume};
-pub use crate::core::{Generator, GeneratorState};
-pub use crate::iter::GeneratorIter;
-pub use crate::stream::GeneratorStream;
-pub use crate::token::GeneratorToken;
