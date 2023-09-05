@@ -43,6 +43,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         /// Yield a value from this generator.
         #[allow(unused_macros)]
         macro_rules! #macro_ident {
+            () => { #token.argument().await };
             ($value:expr) => { #token.yield_($value).await }
         }
     };

@@ -78,6 +78,19 @@ impl<Y, A> RawGeneratorToken<Y, A> {
     pub async fn yield_(self: Pin<&Self>, value: Y) -> A {
         YieldFuture::new(value, self).await
     }
+
+    pub async fn argument(self: Pin<&Self>) -> A {
+        with_context(|cx| {
+            let waker = match GeneratorWaker::from_waker_ref(cx.waker()) {
+                Some(waker) => waker,
+                None => panic!("called GeneratorToken::arg with unsupported waker"),
+            };
+
+            let arg = unsafe { &mut *waker.arg_raw(self) };
+            arg.take_arg().expect("no argument present when resuming")
+        })
+        .await
+    }
 }
 
 struct YieldFuture<'t, Y, A> {

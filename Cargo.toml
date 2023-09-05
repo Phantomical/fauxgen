@@ -1,3 +1,9 @@
+[workspace]
+members = [
+    ".",
+    "macros",
+]
+
 [package]
 name = "fauxgen"
 version = "0.1.0"
@@ -7,17 +13,15 @@ edition = "2021"
 std-generators = []
 
 [dependencies]
-futures-core = "0.3.28"
+futures-core = "0.3"
 fauxgen-macros = { path = "macros" }
-
-[workspace]
-members = [
-    ".",
-    "macros",
-]
 
 [build-dependencies]
 rustc_version = "0.4.0"
 
 [dev-dependencies]
+pin-project = "1.1.0"
 tokio = { version = "1.0", features = [ "test-util", "macros" ] }
+
+[profile.release]
+lto = "fat"

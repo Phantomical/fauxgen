@@ -1,9 +1,10 @@
-#![cfg_attr(nightly, feature(waker_getters, generator_trait))]
+#![cfg_attr(nightly, feature(waker_getters))]
+#![cfg_attr(feature = "std-generators", feature(generator_trait))]
 
-#[cfg(not(nightly))]
+#[cfg(not(feature = "std-generators"))]
 mod core;
 
-#[cfg(nightly)]
+#[cfg(feature = "std-generators")]
 mod core {
     pub use std::ops::{Generator, GeneratorState};
 }

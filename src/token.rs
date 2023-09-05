@@ -31,6 +31,24 @@ impl<'t, Y, A> GeneratorToken<'t, Y, A> {
     pub async fn yield_(&self, value: Y) -> A {
         self.0.as_ref().yield_(value).await
     }
+
+    /// Get the current argument without yielding.
+    ///
+    /// Normally [`yield_`] will yield a value and then read in the next
+    /// argument. However, the very first argument passed in to the generator
+    /// happens before the first call to [`yield_`]. This method is used to read
+    /// that initial argument passed into the generator.
+    ///
+    /// # Panics
+    /// - Panics if evaluated in the context of a generator other than the one
+    ///   this token was created for.
+    /// - Panics if there is no argument saved in the generator context. (e.g.
+    ///   yield has already been called or argument was called multiple times)
+    ///
+    /// [`yield_`]: GeneratorToken::yield_
+    pub async fn argument(&self) -> A {
+        self.0.as_ref().argument().await
+    }
 }
 
 impl<Y, A> Copy for GeneratorToken<'_, Y, A> {}
