@@ -114,7 +114,7 @@ impl VisitMut for ExpandYield {
                     self.visit_expr_mut(expr);
                     expr.to_token_stream()
                 } else {
-                    TokenStream::default()
+                    quote::quote_spanned!(y.yield_token.span => ())
                 };
 
                 let name = &self.macro_name;
