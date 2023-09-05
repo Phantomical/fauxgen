@@ -68,14 +68,6 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     };
 
     if func.sig.asyncness.take().is_some() {
-        func.sig.output = syn::parse_quote!(
-            -> #krate::export::AsyncGenerator<
-                impl #krate::__private::Future<Output = #return_ty>,
-                #yield_ty,
-                #arg_ty
-            >
-        );
-
         func.block = syn::parse_quote!({
             #krate::__private::gen_async(
                 #krate::__private::TokenMarker::new(),
@@ -86,14 +78,6 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
             )
         });
     } else {
-        func.sig.output = syn::parse_quote!(
-            -> #krate::export::SyncGenerator<
-                impl #krate::__private::Future<Output = #return_ty>,
-                #yield_ty,
-                #arg_ty
-            >
-        );
-
         func.block = syn::parse_quote!({
             #krate::__private::gen_sync(
                 #krate::__private::TokenMarker::new(),
