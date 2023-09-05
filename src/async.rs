@@ -22,7 +22,6 @@ pub trait AsyncGenerator<A = ()> {
     }
 }
 
-
 pub struct Resume<'g, A, G: ?Sized> {
     gen: Pin<&'g mut G>,
     arg: Option<A>,

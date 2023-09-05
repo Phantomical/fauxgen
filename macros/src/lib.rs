@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 
-mod generator;
 mod args;
+mod generator;
 
 #[proc_macro_attribute]
 pub fn generator(attr: TokenStream, mut item: TokenStream) -> TokenStream {

@@ -2,9 +2,9 @@
 
 mod future;
 mod token;
+mod util;
 mod waker;
 mod wrapper;
-mod util;
 
 pub use self::token::RawGeneratorToken;
 pub(crate) use self::token::TokenId;

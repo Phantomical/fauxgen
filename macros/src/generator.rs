@@ -42,8 +42,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         // Most people won't see this but it will show up in rust-analyzer.
         /// Yield a value from this generator.
         #[allow(unused_macros)]
-        macro_rules! #macro_ident { 
-            ($value:expr) => { #token.yield_($value).await } 
+        macro_rules! #macro_ident {
+            ($value:expr) => { #token.yield_($value).await }
         }
     };
 

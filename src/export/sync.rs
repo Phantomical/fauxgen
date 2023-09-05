@@ -41,7 +41,7 @@ where
 
 impl<F, Y> Iterator for Pin<&mut SyncGenerator<F, Y, ()>>
 where
-    F: Future<Output = ()>
+    F: Future<Output = ()>,
 {
     type Item = <Self as Generator>::Yield;
 
@@ -55,7 +55,7 @@ where
 
 impl<F, Y> Iterator for Pin<Box<SyncGenerator<F, Y, ()>>>
 where
-    F: Future<Output = ()>
+    F: Future<Output = ()>,
 {
     type Item = <Self as Generator>::Yield;
 

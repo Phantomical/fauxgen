@@ -8,12 +8,18 @@ use crate::detail::RawGeneratorToken;
 pub struct GeneratorToken<'t, Y, A>(Pin<&'t RawGeneratorToken<Y, A>>);
 
 impl<'t, Y, A> GeneratorToken<'t, Y, A> {
-    /// Create this token from a pinned raw token reference.
+    /// Create a new GeneratorToken by registering this one.
     ///
     /// # Safety
-    /// `token` must have already been registered in the current generator
+    /// The `Y` and `A` types for this token must mach those of the generator
     /// context.
-    pub(crate) unsafe fn new(token: Pin<&'t RawGeneratorToken<Y, A>>) -> Self {
+    pub(crate) async unsafe fn register(
+        token: Pin<&'t RawGeneratorToken<Y, A>>,
+    ) -> GeneratorToken<'t, Y, A> {
+        // SAFETY: The caller of this function ensures that the requirements here are
+        //         upheld.
+        token.register().await;
+
         Self(token)
     }
 
