@@ -1,5 +1,5 @@
 error: unknown argument `blargh`
- --> tests/ui/unknown-param.rs:3:13
+ --> tests/ui/fail/unknown-param.rs:3:13
   |
 3 | #[generator(blargh = 3)]
   |             ^^^^^^
