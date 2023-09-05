@@ -1,5 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
+use syn::visit_mut::{self, VisitMut};
 use syn::Result;
 
 use crate::args::Args;
@@ -33,6 +34,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let token = syn::Ident::new("__token", Span::mixed_site());
     let macro_ident = syn::Ident::new_raw("yield", Span::call_site());
 
+    ExpandYield::new(macro_ident.clone()).visit_block_mut(&mut func.block);
     let block = func.block;
 
     let token_decl = quote::quote! {
@@ -93,4 +95,49 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     }
 
     Ok(func.to_token_stream())
+}
+
+struct ExpandYield {
+    macro_name: syn::Ident,
+}
+
+impl ExpandYield {
+    fn new(name: syn::Ident) -> Self {
+        Self { macro_name: name }
+    }
+}
+
+impl VisitMut for ExpandYield {
+    fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
+        match i {
+            syn::Expr::Yield(y) => {
+                let tokens = if let Some(expr) = &mut y.expr {
+                    self.visit_expr_mut(expr);
+                    expr.to_token_stream()
+                } else {
+                    TokenStream::default()
+                };
+
+                let name = &self.macro_name;
+                *i = syn::Expr::Macro(syn::ExprMacro {
+                    attrs: std::mem::take(&mut y.attrs),
+                    mac: syn::Macro {
+                        path: syn::parse_quote!(#name),
+                        bang_token: syn::Token![!](y.yield_token.span),
+                        delimiter: syn::MacroDelimiter::Paren(syn::token::Paren(
+                            y.yield_token.span,
+                        )),
+                        tokens,
+                    },
+                });
+            }
+            _ => visit_mut::visit_expr_mut(self, i),
+        }
+    }
+
+    fn visit_expr_yield_mut(&mut self, i: &mut syn::ExprYield) {
+        if let Some(expr) = &mut i.expr {
+            self.visit_expr_mut(expr);
+        }
+    }
 }
