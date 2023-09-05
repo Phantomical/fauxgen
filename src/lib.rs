@@ -117,7 +117,7 @@
 //!
 //! ```
 //! #[fauxgen::generator(yield = String, arg = u32)]
-//! fn format_each() {
+//! fn format_each() -> u32 {
 //!     let mut count = 0;
 //!     let mut value = argument!();
 //!
@@ -168,6 +168,72 @@ mod core {
     pub use std::ops::{Generator, GeneratorState};
 }
 
+/// Declare a standalone generator function.
+///
+/// This attribute macro transforms a function definition into a generator
+/// definition.
+///
+/// # Parameters
+/// - `yield` - The type that will be yielded from the generator. If not
+///   specified then `()` will be used instead.
+/// - `arg` - The type of the argument that will be passed to the generator via
+///   `resume`. This can be accessed via the `argument!` and `r#yield!` macros
+///   within the generator.
+/// - `crate` - A path at which the fauxgen crate can be accessed. If not
+///   specified then it will use `::fauxgen`.
+///
+/// # Interface
+/// This attribute macro creates two regular macros that can only be used inside
+/// the generator definition itself:
+/// ## `r#yield!`
+/// This is the equivalent of the yield keyword. It takes a value to yield to
+/// the caller and returns the argument that was passed in on resume.
+///
+/// ```
+/// use fauxgen::{Generator, GeneratorState};
+///
+/// #[fauxgen::generator(yield = &'static str, arg = &'static str)]
+/// fn example() -> &'static str {
+///     r#yield!("test")
+/// }
+///
+/// let mut gen = std::pin::pin!(example());
+/// assert!(matches!(gen.as_mut().resume("ignored"), GeneratorState::Yielded("test")));
+/// assert!(matches!(gen.as_mut().resume("another"), GeneratorState::Complete("another")));
+/// ```
+///
+/// Note, however, that the first argument passed into the generator is ignored.
+/// In order to extract the first argument we need to use the `argument!` macro.
+///
+/// ## `argument!`
+/// This macro extracts the argument passed to the very first resume call, the
+/// one that started the generator. It is only valid to call before the first
+/// yield, doing so after will result in a panic.
+///
+/// ```
+/// #[fauxgen::generator(arg = &'static str)]
+/// fn example() {
+///     let first = argument!();
+///     let second = r#yield!();
+///     let third = r#yield!();
+/// }
+/// ```
+///
+/// # Using the `yield` keyword
+/// This macro supports using the `yield` keyword in place of the `r#yield!`
+/// macro. Note that the keyword itself is unstable in rust and to just use it
+/// you will need to enable the nightly `generators` feature.
+#[cfg_attr(nightly, doc = "```")]
+#[cfg_attr(not(nightly), doc = "```compile_fail")]
+/// #![feature(generators)]
+///
+/// #[fauxgen::generator(yield = &'static str)]
+/// fn generator() {
+///     yield "first";
+///     yield "second";
+///     yield "third";
+/// }
+/// ```
 #[cfg(feature = "macros")]
 pub use fauxgen_macros::generator;
 
