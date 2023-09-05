@@ -3,10 +3,11 @@ members = [
     ".",
     "macros",
 ]
+package.version = "0.1.1"
 
 [package]
 name = "fauxgen"
-version = "0.1.0"
+version = { workspace = true }
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = [ "Sean Lynch <sean@lynches.ca>" ]
@@ -25,7 +26,7 @@ macros = [ "dep:fauxgen-macros" ]
 
 [dependencies]
 futures-core = "0.3"
-fauxgen-macros = { version = "0.1.0", path = "macros", optional = true }
+fauxgen-macros = { version = "=0.1.1", path = "macros", optional = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"
