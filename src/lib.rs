@@ -1,4 +1,12 @@
-//! Generators on stable rust.
+//! This crate implements generators for Rust.
+//!
+//! Rust has built-in generators but they are currently unstable and so they can
+//! only be used on nightly.
+//!
+//! # Defining a Generator
+//! This crate provides two different ways to define generators. The first is as
+//! a top-level function:
+//! 
 
 #![cfg_attr(nightly, feature(waker_getters))]
 #![cfg_attr(feature = "std-generators", feature(generator_trait))]
