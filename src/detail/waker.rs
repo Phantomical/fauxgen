@@ -43,8 +43,8 @@ impl GeneratorWaker {
     }
 
     pub fn from_waker_ref(waker: &Waker) -> Option<&Self> {
-        let waker = crate::util::waker_as_raw(waker);
-        let parts = crate::util::waker_into_parts(waker);
+        let waker = crate::detail::util::waker_as_raw(waker);
+        let parts = crate::detail::util::waker_into_parts(waker);
 
         if parts.vtable != &GENERATOR_WAKER_VTABLE {
             return None;
@@ -69,7 +69,7 @@ impl GeneratorWaker {
 
     fn clone_waker(&self) -> RawWaker {
         match self.waker() {
-            Some(waker) => crate::util::waker_into_raw(waker.clone()),
+            Some(waker) => crate::detail::util::waker_into_raw(waker.clone()),
             None => noop_waker(),
         }
     }

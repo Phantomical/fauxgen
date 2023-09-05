@@ -1,4 +1,4 @@
-use fakerator::{generator, GeneratorExt};
+use fakerator::generator;
 
 #[generator(yield = u64)]
 fn fibonacci() {
@@ -20,7 +20,7 @@ where
     I::Item: Clone,
 {
     let fibonnaci = std::pin::pin!(fibonacci());
-    for (item, count) in iter.into_iter().zip(fibonnaci.iter()) {
+    for (item, count) in iter.into_iter().zip(fibonnaci) {
         for _ in 0..count {
             r#yield!(item.clone());
         }
@@ -31,7 +31,7 @@ fn main() {
     let data = vec!["hi", "there", "one", "two", "three"];
     let fib = std::pin::pin!(fibonacci_repeat(data));
 
-    for item in fib.iter() {
+    for item in fib {
         println!("{item}")
     }
 }

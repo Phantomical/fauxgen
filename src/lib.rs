@@ -4,12 +4,18 @@
 #[cfg(not(feature = "std-generators"))]
 mod core;
 
+#[cfg(feature = "std-generators")]
+mod core {
+    pub use std::ops::{Generator, GeneratorState};
+}
+
+#[path = "async.rs"]
 mod asynk;
 mod detail;
 mod impls;
-mod sync;
+mod stream;
 mod token;
-mod util;
+mod iter;
 
 pub mod export;
 
@@ -56,13 +62,10 @@ pub mod __private {
     }
 }
 
-#[cfg(feature = "std-generators")]
-pub use std::ops::{Generator, GeneratorState};
-
 pub use fakerator_macros::generator;
 
-pub use crate::asynk::{AsyncGenerator, AsyncGeneratorExt, GenStream, Resume};
-#[cfg(not(feature = "std-generators"))]
+pub use crate::asynk::{AsyncGenerator, Resume};
+pub use crate::iter::GeneratorIter;
 pub use crate::core::{Generator, GeneratorState};
-pub use crate::sync::{GenIter, GeneratorExt};
+pub use crate::stream::GeneratorStream;
 pub use crate::token::GeneratorToken;

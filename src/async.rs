@@ -2,8 +2,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use futures_core::Stream;
-
 use crate::GeneratorState;
 
 pub trait AsyncGenerator<A = ()> {
@@ -24,33 +22,6 @@ pub trait AsyncGenerator<A = ()> {
     }
 }
 
-pub trait AsyncGeneratorExt<A = ()>: AsyncGenerator<A> {
-    fn stream(self) -> GenStream<Self>
-    where
-        Self: Sized,
-    {
-        GenStream(self)
-    }
-}
-
-impl<A, G> AsyncGeneratorExt<A> for G where G: AsyncGenerator<A> {}
-
-pub struct GenStream<G>(G);
-
-impl<G> Stream for GenStream<G>
-where
-    G: AsyncGenerator<(), Return = ()>,
-{
-    type Item = G::Yield;
-
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let gen = unsafe { self.map_unchecked_mut(|s| &mut s.0) };
-        gen.poll_resume(cx, Some(())).map(|state| match state {
-            GeneratorState::Yielded(value) => Some(value),
-            GeneratorState::Complete(()) => None,
-        })
-    }
-}
 
 pub struct Resume<'g, A, G: ?Sized> {
     gen: Pin<&'g mut G>,

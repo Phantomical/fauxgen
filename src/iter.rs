@@ -2,19 +2,19 @@ use std::pin::Pin;
 
 use crate::{Generator, GeneratorState};
 
-pub trait GeneratorExt<A = ()>: Generator<A> {
-    fn iter(self) -> GenIter<Self>
-    where
-        Self: Unpin + Sized,
-    {
-        GenIter(self)
+pub struct GeneratorIter<G>(G);
+
+impl<G> GeneratorIter<G> {
+    pub fn new(gen: G) -> Self {
+        Self(gen)
+    }
+
+    pub fn into_inner(self) -> G {
+        self.0
     }
 }
 
-impl<A, G> GeneratorExt<A> for G where G: Generator<A> {}
-pub struct GenIter<G>(G);
-
-impl<G> Iterator for GenIter<G>
+impl<G> Iterator for GeneratorIter<G>
 where
     G: Generator<(), Return = ()> + Unpin,
 {
