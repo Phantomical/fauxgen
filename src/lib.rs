@@ -113,7 +113,7 @@
 //! If you run the code above (or look closely) then you might notice that the
 //! first argument passed into the generator is ignored. This usually isn't
 //! what you want. In order to access the first argument you can use the
-//! argument macro:
+//! `argument!` macro:
 //!
 //! ```
 //! #[fauxgen::generator(yield = String, arg = u32)]
