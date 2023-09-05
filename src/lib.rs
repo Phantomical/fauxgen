@@ -44,6 +44,7 @@ mod core {
 
 pub mod export;
 
+#[cfg(feature = "macros")]
 pub use fauxgen_macros::generator;
 
 pub use crate::asynk::{AsyncGenerator, Resume};
