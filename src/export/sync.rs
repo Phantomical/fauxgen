@@ -52,3 +52,14 @@ where
         }
     }
 }
+
+impl<F, Y> Iterator for Pin<Box<SyncGenerator<F, Y, ()>>>
+where
+    F: Future<Output = ()>
+{
+    type Item = <Self as Generator>::Yield;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.as_mut().next()
+    }
+}

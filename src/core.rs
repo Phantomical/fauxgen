@@ -8,37 +8,7 @@ use std::pin::Pin;
 /// syntax but will likely extend to also providing an ergonomic definition for
 /// iterators and other primitives.
 ///
-/// The syntax and semantics for generators is unstable and will require a
-/// further RFC for stabilization. At this time, though, the syntax is
-/// closure-like:
-///
-/// ```rust
-/// #![feature(generators, generator_trait)]
-///
-/// use std::ops::{Generator, GeneratorState};
-/// use std::pin::Pin;
-///
-/// fn main() {
-///     let mut generator = || {
-///         yield 1;
-///         "foo"
-///     };
-///
-///     match Pin::new(&mut generator).resume(()) {
-///         GeneratorState::Yielded(1) => {}
-///         _ => panic!("unexpected return from resume"),
-///     }
-///     match Pin::new(&mut generator).resume(()) {
-///         GeneratorState::Complete("foo") => {}
-///         _ => panic!("unexpected return from resume"),
-///     }
-/// }
-/// ```
-///
-/// More documentation of generators can be found in the [unstable book].
-///
-/// [RFC 2033]: https://github.com/rust-lang/rfcs/pull/2033
-/// [unstable book]: ../../unstable-book/language-features/generators.html
+/// This trait is an exact copy of the unstable one available in [`std::ops`].
 pub trait Generator<R = ()> {
     /// The type of value this generator yields.
     ///
@@ -90,6 +60,8 @@ pub trait Generator<R = ()> {
 /// This enum is returned from the `Generator::resume` method and indicates the
 /// possible return values of a generator. Currently this corresponds to either
 /// a suspension point (`Yielded`) or a termination point (`Complete`).
+///
+/// This struct is an exact copy of the unstable one available in [`std::ops`].
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug, Hash)]
 pub enum GeneratorState<Y, R> {
     /// The generator suspended with a value.

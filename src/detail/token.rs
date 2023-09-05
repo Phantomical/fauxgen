@@ -34,7 +34,7 @@ pub struct RawGeneratorToken<Y, A> {
 }
 
 impl<Y, A> RawGeneratorToken<Y, A> {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             _filler: 0,
             _marker: PhantomData,
