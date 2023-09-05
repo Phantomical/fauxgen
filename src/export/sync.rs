@@ -4,6 +4,7 @@ use std::pin::Pin;
 use crate::detail::GeneratorWrapper;
 use crate::{Generator, GeneratorState};
 
+#[must_use = "generators are lazy and do nothing unless consumed"]
 pub struct SyncGenerator<F, Y, A>(GeneratorWrapper<F, Y, A>);
 
 impl<F, Y, A> SyncGenerator<F, Y, A> {

@@ -7,6 +7,7 @@ use futures_core::Stream;
 use crate::detail::{GeneratorArg, GeneratorWrapper};
 use crate::{AsyncGenerator as _, GeneratorState, Resume};
 
+#[must_use = "generators are lazy and do nothing unless polled"]
 pub struct AsyncGenerator<F, Y, A> {
     inner: GeneratorWrapper<F, Y, A>,
     arg: GeneratorArg<Y, A>,
