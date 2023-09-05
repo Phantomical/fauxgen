@@ -1,0 +1,10 @@
+error[E0412]: cannot find type `Undef` in this scope
+ --> tests/ui/fail/unknown-return-type.rs:4:24
+  |
+4 | fn some_generator() -> Undef {
+  |                        ^^^^^ not found in this scope
+  |
+help: you might be missing a type parameter
+  |
+4 | fn some_generator<Undef>() -> Undef {
+  |                  +++++++
