@@ -35,8 +35,10 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
     let block = func.block;
 
+    let token_decl = quote::quote! {
+        let #token = #krate::__private::token();
+    };
     let prelude = quote::quote! {
-        let #token = #krate::__private::token::<#yield_ty, #arg_ty>();
         let #token = #krate::__private::pin!(#token);
         let #token = #token.as_ref();
         #krate::__private::register(#token).await;
@@ -50,8 +52,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         }
     };
 
-    if func.sig.asyncness.is_some() {
-        func.sig.asyncness = None;
+    if func.sig.asyncness.take().is_some() {
         func.sig.output = syn::parse_quote!(
             -> #krate::export::AsyncGenerator<
                 impl #krate::__private::Future<Output = #return_ty>,
@@ -61,8 +62,9 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
+            #token_decl
             #krate::__private::gen_async(
-                #krate::__private::TokenMarker::new(),
+                #token.marker(),
                 async move {
                     #prelude
                     #block
@@ -79,8 +81,9 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
+            #token_decl
             #krate::__private::gen_sync(
-                #krate::__private::TokenMarker::new(),
+                #token.marker(),
                 async move {
                     #prelude
                     #block
