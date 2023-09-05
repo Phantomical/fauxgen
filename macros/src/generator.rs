@@ -33,9 +33,10 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     // It is still named using underscores so it doesn't show up as much within
     // rust-analzyer.
     let token = syn::Ident::new("__token", Span::mixed_site());
-    let macro_ident = syn::Ident::new_raw("yield", Span::call_site());
+    let yield_ident = syn::Ident::new_raw("yield", Span::call_site());
+    let argument_ident = syn::Ident::new("argument", Span::call_site());
 
-    expand_yield(&macro_ident, &mut func.block);
+    expand_yield(&yield_ident, &mut func.block);
     transform_sig(
         &mut func.sig,
         &mut yield_ty,
@@ -55,9 +56,14 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         // Most people won't see this but it will show up in rust-analyzer.
         /// Yield a value from this generator.
         #[allow(unused_macros)]
-        macro_rules! #macro_ident {
-            () => { #token.argument().await };
+        macro_rules! #yield_ident {
             ($value:expr) => { #token.yield_($value).await }
+        }
+
+        /// Argument passed into the generator before the first yield.
+        #[allow(unused_macros)]
+        macro_rules! #argument_ident {
+            () => { #token.argument().await }
         }
     };
 

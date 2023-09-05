@@ -49,7 +49,7 @@ fn powers_of_two() {
 
 #[generator(yield = u32, arg = u64)]
 fn leading_zeros() {
-    let mut value = r#yield!();
+    let mut value = argument!();
 
     loop {
         value = r#yield!(value.leading_zeros());
