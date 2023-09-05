@@ -243,7 +243,7 @@ pub use fauxgen_macros::generator;
 pub use crate::asynk::{AsyncGenerator, Resume};
 pub use crate::core::{Generator, GeneratorState};
 pub use crate::iter::GeneratorIter;
-pub use crate::stream::GeneratorStream;
+pub use crate::stream::{GeneratorStream, GeneratorTryStream};
 pub use crate::token::GeneratorToken;
 
 /// Declare an inline generator function.
