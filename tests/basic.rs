@@ -1,4 +1,4 @@
-use genawaiter::{generator, Generator};
+use genawaiter::{generator, GeneratorExt};
 
 #[generator(yield = i32)]
 pub fn basic_gen() {
