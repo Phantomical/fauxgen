@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll, RawWakerVTable};
 
 use crate::waker::{GeneratorWaker, GENERATOR_WAKER_VTABLE};
+use crate::TokenId;
 
 pub(crate) enum GeneratorArg<Y, A> {
     Yield(Y),
@@ -35,23 +36,62 @@ impl<Y, A> GeneratorArg<Y, A> {
     }
 }
 
-pub struct GeneratorToken<Y, A>(PhantomData<(Y, A)>);
+pub struct GeneratorToken<Y, A> {
+    _marker: PhantomData<(Y, A)>,
+}
 
 impl<Y, A> GeneratorToken<Y, A> {
     #[doc(hidden)]
     pub fn new() -> Self {
-        Self(PhantomData)
+        Self {
+            _marker: PhantomData,
+        }
     }
 
-    pub fn do_yield(&self, value: Y) -> YieldFuture<Y, A> {
-        unsafe { YieldFuture::new(value) }
+    pub fn id(self: Pin<&Self>) -> TokenId {
+        self.get_ref() as *const _ as *const ()
+    }
+
+    pub fn do_yield(self: Pin<&Self>, value: Y) -> YieldFuture<Y, A> {
+        unsafe { YieldFuture::new(self.id(), value) }
+    }
+
+    pub fn register(self: Pin<&Self>) -> RegisterFuture {
+        RegisterFuture { id: self.id() }
     }
 }
 
 impl<Y, A> Unpin for GeneratorToken<Y, A> {}
 
+pub struct RegisterFuture {
+    id: TokenId,
+}
+
+impl Future for RegisterFuture {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let waker = cx.waker();
+        let waker = crate::util::waker_as_raw(waker);
+        let parts = crate::util::waker_into_parts(waker);
+
+        if parts.vtable != &GENERATOR_WAKER_VTABLE {
+            panic!("YieldFuture called with an unsupported waker");
+        }
+
+        // SAFETY: We verified the vtable above so we know that the data pointer
+        //         is a reference to a GeneratorArg instance. That the argument types
+        //         are correct was asserted while constructing this future.
+        let waker = unsafe { &*(parts.data as *const GeneratorWaker) };
+
+        waker.set_id(self.id);
+        Poll::Ready(())
+    }
+}
+
 pub struct YieldFuture<Y, A> {
     value: Option<Y>,
+    id: TokenId,
     _arg: PhantomData<A>,
 }
 
@@ -59,9 +99,10 @@ impl<Y, A> YieldFuture<Y, A> {
     /// # Safety
     /// This requires that the outer `GeneratorWrapper` type has the exact same
     /// `Y` and `A` parameters.
-    pub unsafe fn new(value: Y) -> Self {
+    pub unsafe fn new(id: TokenId, value: Y) -> Self {
         Self {
             value: Some(value),
+            id,
             _arg: PhantomData,
         }
     }
@@ -91,7 +132,7 @@ impl<Y, A> Future for YieldFuture<Y, A> {
         let waker = unsafe { &*(parts.data as *const GeneratorWaker) };
 
         // SAFETY: Constructing this future verified that the arguments are correct.
-        let arg: &mut GeneratorArg<Y, A> = unsafe { &mut *waker.arg() };
+        let arg: &mut GeneratorArg<Y, A> = unsafe { &mut *waker.arg(self.id) };
 
         match self.value.take() {
             Some(value) => {

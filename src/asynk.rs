@@ -6,7 +6,7 @@ use futures_core::Stream;
 
 use crate::common::GeneratorArg;
 use crate::waker::GeneratorWaker;
-use crate::GeneratorState;
+use crate::{GeneratorState, TokenId};
 
 pub trait AsyncGenerator<A = ()> {
     type Yield;
@@ -43,6 +43,7 @@ impl<A, G> AsyncGeneratorExt<A> for G where G: AsyncGenerator<A> {}
 pub struct GeneratorWrapper<F, Y, A> {
     future: F,
     arg: GeneratorArg<Y, A>,
+    id: TokenId,
 }
 
 impl<F, Y, A> GeneratorWrapper<F, Y, A> {
@@ -50,6 +51,7 @@ impl<F, Y, A> GeneratorWrapper<F, Y, A> {
         Self {
             future,
             arg: GeneratorArg::Empty,
+            id: std::ptr::null(),
         }
     }
 }
@@ -77,7 +79,7 @@ where
 
         // SAFETY: GeneratorWaker's clone impl returns a different waker so none of the
         //         references stored in waker will outlive this function.
-        let waker = unsafe { GeneratorWaker::new(Some(cx.waker()), arg) };
+        let waker = unsafe { GeneratorWaker::new(Some(cx.waker()), arg, &mut this.id) };
 
         // SAFETY: waker will not outlive this function.
         let waker = unsafe { waker.to_waker() };

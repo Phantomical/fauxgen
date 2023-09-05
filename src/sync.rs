@@ -5,7 +5,7 @@ use std::task::{Context, Poll};
 
 use crate::common::GeneratorArg;
 use crate::waker::GeneratorWaker;
-use crate::GeneratorState;
+use crate::{GeneratorState, TokenId};
 
 /// The generator trait, copied from std.
 pub trait Generator<A = ()> {
@@ -28,6 +28,7 @@ impl<A, G> GeneratorExt<A> for G where G: Generator<A> {}
 
 pub struct GeneratorWrapper<F, Y, A> {
     future: F,
+    id: TokenId,
     _arg: PhantomData<(Y, A)>,
 }
 
@@ -35,6 +36,7 @@ impl<F, Y, A> GeneratorWrapper<F, Y, A> {
     pub fn new(future: F) -> Self {
         Self {
             future,
+            id: std::ptr::null(),
             _arg: PhantomData,
         }
     }
@@ -48,17 +50,18 @@ where
     type Return = F::Output;
 
     fn resume(self: Pin<&mut Self>, arg: A) -> GeneratorState<Self::Yield, Self::Return> {
+        // Manual pin projection
+        let this = unsafe { self.get_unchecked_mut() };
+        let future = unsafe { Pin::new_unchecked(&mut this.future) };
+
         let mut arg: GeneratorArg<Y, A> = GeneratorArg::Arg(arg);
 
         // SAFETY: GeneratorWaker's clone impl returns a different waker so none of the
         //         references stored in waker will outlive this function.
-        let waker = unsafe { GeneratorWaker::new(None, &mut arg) };
+        let waker = unsafe { GeneratorWaker::new(None, &mut arg, &mut this.id) };
 
         // SAFETY: waker will not outlive this function.
         let waker = unsafe { waker.to_waker() };
-
-        // SAFETY: We don't move anything using the mut reference so this is safe.
-        let future = unsafe { self.map_unchecked_mut(|this| &mut this.future) };
 
         let mut context = Context::from_waker(&waker);
         match future.poll(&mut context) {

@@ -8,12 +8,15 @@ mod sync;
 mod util;
 mod waker;
 
-pub use genawaiter_macros::generator;
+pub use fakerator_macros::generator;
 
 pub use crate::asynk::{AsyncGenerator, AsyncGeneratorExt, GenStream, Resume};
 pub use crate::sync::{GenIter, Generator, GeneratorExt};
 
+type TokenId = *const ();
+
 /// Copied from std.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GeneratorState<Y, R> {
     Yield(Y),
     Return(R),

@@ -1,11 +1,11 @@
 [package]
-name = "genawaiter"
+name = "fakerator"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 futures-core = "0.3.28"
-genawaiter-macros = { path = "macros" }
+fakerator-macros = { path = "macros" }
 pin-project = "1.1.0"
 
 [workspace]
@@ -16,3 +16,6 @@ members = [
 
 [build-dependencies]
 rustc_version = "0.4.0"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = [ "test-util", "macros" ] }

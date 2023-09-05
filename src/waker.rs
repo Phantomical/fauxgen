@@ -2,18 +2,25 @@ use std::ptr::NonNull;
 use std::task::{RawWaker, RawWakerVTable, Waker};
 
 use crate::common::GeneratorArg;
+use crate::TokenId;
 
 #[repr(C)]
 pub(crate) struct GeneratorWaker {
     waker: Option<NonNull<Waker>>,
+    id: *mut TokenId,
     arg: *mut (),
 }
 
 impl GeneratorWaker {
-    pub unsafe fn new<Y, A>(waker: Option<&Waker>, arg: &mut GeneratorArg<Y, A>) -> Self {
+    pub unsafe fn new<Y, A>(
+        waker: Option<&Waker>,
+        arg: &mut GeneratorArg<Y, A>,
+        id: &mut TokenId,
+    ) -> Self {
         Self {
             waker: waker.map(NonNull::from),
             arg: arg as *mut _ as *mut _,
+            id,
         }
     }
 
@@ -41,7 +48,15 @@ impl GeneratorWaker {
         }
     }
 
-    pub fn arg<Y, A>(&self) -> *mut GeneratorArg<Y, A> {
+    pub fn set_id(&self, id: TokenId) {
+        unsafe { *self.id = id };
+    }
+
+    pub fn arg<Y, A>(&self, id: TokenId) -> *mut GeneratorArg<Y, A> {
+        if unsafe { *self.id != id } {
+            panic!("attempted to yield to the waker for a different generator");
+        }
+
         self.arg as *mut _
     }
 }
