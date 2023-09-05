@@ -1,5 +1,6 @@
-use proc_macro2::{Span, TokenStream};
 use std::mem;
+
+use proc_macro2::{Span, TokenStream};
 use syn::visit_mut::{self, VisitMut};
 use syn::{
     parse_quote_spanned, token, Expr, GenericArgument, Lifetime, Receiver, ReturnType, Token, Type,
