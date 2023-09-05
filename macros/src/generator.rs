@@ -14,15 +14,15 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         Some(krate) => krate.value,
         None => syn::parse_quote!(::fauxgen),
     };
-    let yield_ty = match args.yield_ {
+    let mut yield_ty = match args.yield_ {
         Some(ty) => ty.value,
         None => syn::parse_quote!(()),
     };
-    let arg_ty = match args.arg {
+    let mut arg_ty = match args.arg {
         Some(ty) => ty.value,
         None => syn::parse_quote!(()),
     };
-    let return_ty = match std::mem::replace(&mut func.sig.output, syn::ReturnType::Default) {
+    let mut return_ty = match std::mem::replace(&mut func.sig.output, syn::ReturnType::Default) {
         syn::ReturnType::Default => syn::parse_quote!(()),
         syn::ReturnType::Type(_, ty) => ty,
     };
@@ -36,7 +36,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let macro_ident = syn::Ident::new_raw("yield", Span::call_site());
 
     expand_yield(&macro_ident, &mut func.block);
-    transform_sig(&mut func.sig, &yield_ty, &arg_ty, &return_ty, &krate);
+    transform_sig(&mut func.sig, &mut yield_ty, &mut arg_ty, &mut return_ty, &krate);
 
     let block = func.block;
 
@@ -159,9 +159,9 @@ impl VisitMut for ExpandYield {
 /// ```
 fn transform_sig(
     sig: &mut syn::Signature,
-    yield_ty: &syn::Type,
-    arg_ty: &syn::Type,
-    return_ty: &syn::Type,
+    yield_ty: &mut syn::Type,
+    arg_ty: &mut syn::Type,
+    return_ty: &mut syn::Type,
     krate: &syn::Path,
 ) {
     use std::mem;
@@ -179,6 +179,10 @@ fn transform_sig(
 
         lifetimes.visit_fn_arg_mut(arg)
     }
+
+    lifetimes.visit_type_mut(yield_ty);
+    lifetimes.visit_type_mut(arg_ty);
+    lifetimes.visit_type_mut(return_ty);
 
     for param in &mut sig.generics.params {
         match param {
@@ -221,7 +225,8 @@ fn transform_sig(
         sig.generics.params.push(syn::parse_quote!(#elided));
         where_clause_or_default(&mut sig.generics.where_clause)
             .predicates
-            .push(syn::parse_quote_spanned!(elided.span()=> #elided: 'async_trait));
+            .push(syn::parse_quote_spanned!(elided.span()=> #elided: #gen_lt));
+        needs_gen = true;
     }
 
     let gen_bound = if needs_gen {
