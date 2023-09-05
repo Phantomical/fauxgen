@@ -82,6 +82,13 @@ impl<Y, A> Future for YieldFuture<Y, A> {
 
         #[cfg(not(nightly))]
         let arg: &mut GeneratorArg<Y, A> = {
+            use std::task::{RawWaker, Waker};
+
+            assert_eq!(
+                std::mem::size_of::<Waker>(),
+                std::mem::size_of::<RawWaker>()
+            );
+
             // SAFETY: Waker is annotated with `#[repr(transparent)]` so this is currently
             //         safe. It is not a stable guarantee though and we should use
             //         Waker::as_raw once waker_getters stablilizes.
