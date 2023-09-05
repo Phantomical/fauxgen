@@ -58,7 +58,7 @@ pub mod __private {
     }
 }
 
-pub use fakerator_macros::generator;
+pub use fauxgen_macros::generator;
 
 pub use crate::asynk::{AsyncGenerator, Resume};
 pub use crate::core::{Generator, GeneratorState};

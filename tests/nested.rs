@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use fakerator::{generator, GeneratorState};
+use fauxgen::{generator, GeneratorState};
 
 #[generator(yield = u32)]
 async fn outer() {

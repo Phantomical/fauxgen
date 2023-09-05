@@ -1,4 +1,4 @@
-use fakerator::generator;
+use fauxgen::generator;
 
 #[generator(yield = i32)]
 pub fn basic_gen() {

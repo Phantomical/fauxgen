@@ -1,5 +1,5 @@
 [package]
-name = "fakerator"
+name = "fauxgen"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,7 +8,7 @@ std-generators = []
 
 [dependencies]
 futures-core = "0.3.28"
-fakerator-macros = { path = "macros" }
+fauxgen-macros = { path = "macros" }
 pin-project = "1.1.0"
 
 [workspace]

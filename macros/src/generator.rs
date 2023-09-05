@@ -10,7 +10,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 
     let krate = match args.crate_ {
         Some(krate) => krate.value,
-        None => syn::parse_quote!(::fakerator),
+        None => syn::parse_quote!(::fauxgen),
     };
     let yield_ty = match args.yield_ {
         Some(ty) => ty.value,

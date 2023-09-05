@@ -1,4 +1,4 @@
-use fakerator::generator;
+use fauxgen::generator;
 
 #[generator(yield = u64)]
 fn fibonacci() {
