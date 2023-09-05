@@ -9,6 +9,10 @@ name = "fauxgen"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+description   = "write your own generators in stable rust"
+documentation = "https://docs.rs/fauxgen"
+repository    = "https://github.com/phantomical/fauxgen"
+homepage      = "https://github.com/phantomical/fauxgen"
 
 [features]
 default = [ "macros" ]
