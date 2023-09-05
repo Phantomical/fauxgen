@@ -16,6 +16,18 @@ fn iter_basic() {
 }
 
 #[test]
+fn ensure_send() {
+    #[fauxgen::generator(yield = i32)]
+    fn should_be_send() {
+        r#yield!(32);
+    }
+
+    fn assert_send<T: Send>(_: T) {}
+
+    assert_send(should_be_send());
+}
+
+#[test]
 #[cfg(not(all()))]
 fn iter_with_lifetime() {
     #[generator(yield = &str)]
