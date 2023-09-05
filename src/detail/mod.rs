@@ -6,10 +6,14 @@ mod util;
 mod waker;
 mod wrapper;
 
-pub use self::token::{RawGeneratorToken, TokenMarker};
 pub(crate) use self::token::TokenId;
 pub(crate) use self::waker::GeneratorWaker;
 pub(crate) use self::wrapper::GeneratorWrapper;
+
+#[allow(dead_code)]
+fn stop_import_reordering() {}
+
+pub use self::token::{RawGeneratorToken, TokenMarker};
 
 pub(crate) enum GeneratorArg<Y, A> {
     Yield(Y),
