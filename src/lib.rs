@@ -21,7 +21,7 @@
 //! ```
 //! use fauxgen::{gen, GeneratorToken};
 //!
-//! let generator = fauxgen::gen!(|token: GeneratorToken<_>| async move {
+//! let generator = fauxgen::gen!(|token: GeneratorToken<_>| {
 //!     token.yield_(1i32).await;
 //!     token.yield_(2i32).await;
 //! });
@@ -167,6 +167,9 @@ mod core;
 mod core {
     pub use std::ops::{Generator, GeneratorState};
 }
+
+#[doc = include_str!("../README.md")]
+mod readme {}
 
 /// Declare a standalone generator function.
 ///
