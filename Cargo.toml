@@ -14,6 +14,10 @@ description   = "write your own generators in stable rust"
 documentation = "https://docs.rs/fauxgen"
 repository    = "https://github.com/phantomical/fauxgen"
 homepage      = "https://github.com/phantomical/fauxgen"
+exclude = [
+    "/macros",
+    "/.cargo"
+]
 
 [features]
 default = [ "macros" ]
