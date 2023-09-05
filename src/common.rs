@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::marker::PhantomData;
 use std::pin::Pin;
-use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+use std::task::{Context, Poll, RawWakerVTable};
 
 pub(crate) static GENERATOR_WAKER_VTABLE: RawWakerVTable =
     RawWakerVTable::new(crate::noop::noop_clone, drop, drop, drop);
