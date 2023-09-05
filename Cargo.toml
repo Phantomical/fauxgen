@@ -20,6 +20,7 @@ fauxgen-macros = { path = "macros" }
 rustc_version = "0.4.0"
 
 [dev-dependencies]
+futures-util = "0.3.28"
 pin-project = "1.1.0"
 tokio = { version = "1.0", features = [ "test-util", "macros" ] }
 

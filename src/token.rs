@@ -5,20 +5,20 @@ use crate::detail::RawGeneratorToken;
 /// A generator token ties together the executor and the generator itself.
 ///
 /// It is what allows us to yield values back out of the generator.
-pub struct GeneratorToken<'t, Y, A = ()>(Pin<&'t RawGeneratorToken<Y, A>>);
+pub struct GeneratorToken<Y, A = ()>(Pin<Box<RawGeneratorToken<Y, A>>>);
 
-impl<'t, Y, A> GeneratorToken<'t, Y, A> {
+impl<'t, Y, A> GeneratorToken<Y, A> {
     /// Create a new GeneratorToken by registering this one.
     ///
     /// # Safety
     /// The `Y` and `A` types for this token must mach those of the generator
     /// context.
-    pub(crate) async unsafe fn register(
-        token: Pin<&'t RawGeneratorToken<Y, A>>,
-    ) -> GeneratorToken<'t, Y, A> {
+    pub(crate) async unsafe fn register(token: RawGeneratorToken<Y, A>) -> GeneratorToken<Y, A> {
+        let token = Box::pin(token);
+
         // SAFETY: The caller of this function ensures that the requirements here are
         //         upheld.
-        token.register().await;
+        token.as_ref().register().await;
 
         Self(token)
     }
@@ -48,12 +48,5 @@ impl<'t, Y, A> GeneratorToken<'t, Y, A> {
     /// [`yield_`]: GeneratorToken::yield_
     pub async fn argument(&self) -> A {
         self.0.as_ref().argument().await
-    }
-}
-
-impl<Y, A> Copy for GeneratorToken<'_, Y, A> {}
-impl<Y, A> Clone for GeneratorToken<'_, Y, A> {
-    fn clone(&self) -> Self {
-        *self
     }
 }

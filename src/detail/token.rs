@@ -6,6 +6,10 @@ use std::task::{Context, Poll};
 use crate::detail::future::with_context;
 use crate::detail::waker::GeneratorWaker;
 use crate::detail::GeneratorArg;
+use crate::export::{AsyncGenerator, SyncGenerator};
+use crate::GeneratorToken;
+
+used_in_docs!(SyncGenerator, AsyncGenerator, GeneratorToken);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub(crate) struct TokenId(*const ());
@@ -22,6 +26,24 @@ impl TokenId {
 
     pub fn is_valid(self) -> bool {
         !self.0.is_null()
+    }
+}
+
+/// Marker type used to ensure that the generator wrapper and the generator
+/// token share the same yield and argument types.
+///
+/// When using the [`gen!`] macro we need a way to ensure that the
+/// [`SyncGenerator`] or [`AsyncGenerator`] types have the same type parameters
+/// as the [`GeneratorToken`] passed to the user code. We can't pass the token
+/// itself, since it is needed elsewhere, so instead we used this zero-sized
+/// marker type to bridge the gap.
+///
+/// [`gen!`]: crate::gen!
+pub struct TokenMarker<Y, A>(PhantomData<(Y, A)>);
+
+impl<Y, A> TokenMarker<Y, A> {
+    pub const fn new() -> Self {
+        Self(PhantomData)
     }
 }
 
@@ -47,6 +69,12 @@ impl<Y, A> RawGeneratorToken<Y, A> {
     /// still alive.
     pub(crate) fn id(self: Pin<&Self>) -> TokenId {
         TokenId::new(self.get_ref() as *const _ as _)
+    }
+
+    /// Returns a [`TokenMarker`] that shares the same `Y` and `A` parameters as
+    /// this `RawGeneratorToken`.
+    pub fn marker(&self) -> TokenMarker<Y, A> {
+        TokenMarker::new()
     }
 
     /// Register this token with the current generator.
