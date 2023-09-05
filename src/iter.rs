@@ -1,7 +1,14 @@
 use std::pin::Pin;
 
-use crate::{Generator, GeneratorState};
+use crate::{generator, Generator, GeneratorState};
 
+used_in_docs!(generator);
+
+/// Wrapper around a generator that implements [`Iterator`].
+///
+/// The generators created by the [`generator`] macro implement [`Iterator`]
+/// once they are pinned. For other implementations of [`Generator`], though,
+/// you can use `GeneratorIter` to convert them into an interator.
 pub struct GeneratorIter<G>(G);
 
 impl<G> GeneratorIter<G> {
