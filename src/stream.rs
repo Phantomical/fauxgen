@@ -3,8 +3,15 @@ use std::task::{Context, Poll};
 
 use futures_core::Stream;
 
-use crate::{AsyncGenerator, GeneratorState};
+use crate::{generator, AsyncGenerator, GeneratorState};
 
+used_in_docs!(generator);
+
+/// Wrapper around an async generator that implements [`Stream`].
+///
+/// The generators created by the [`generator`] macro implement [`Stream`] by
+/// default. However, other implementations of [`AsyncGenerator`] will need this
+/// wrapper type in order to be used as a stream.
 pub struct GeneratorStream<G>(G);
 
 impl<G> GeneratorStream<G> {
