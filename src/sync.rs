@@ -22,8 +22,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         match Pin::new(&mut self.0).resume(()) {
-            GeneratorState::Return(()) => None,
-            GeneratorState::Yield(value) => Some(value),
+            GeneratorState::Complete(()) => None,
+            GeneratorState::Yielded(value) => Some(value),
         }
     }
 }

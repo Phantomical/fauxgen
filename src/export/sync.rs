@@ -47,8 +47,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.as_mut().resume(()) {
-            GeneratorState::Yield(value) => Some(value),
-            GeneratorState::Return(()) => None,
+            GeneratorState::Yielded(value) => Some(value),
+            GeneratorState::Complete(()) => None,
         }
     }
 }

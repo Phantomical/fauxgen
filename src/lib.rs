@@ -24,8 +24,8 @@ pub mod __private {
     #[allow(dead_code)]
     fn _dummy() {}
 
-    pub use std::pin::pin;
     pub use std::future::Future;
+    pub use std::pin::pin;
 
     pub use crate::detail::RawGeneratorToken;
 
@@ -56,9 +56,13 @@ pub mod __private {
     }
 }
 
+#[cfg(feature = "std-generators")]
+pub use std::ops::{Generator, GeneratorState};
+
 pub use fakerator_macros::generator;
 
 pub use crate::asynk::{AsyncGenerator, AsyncGeneratorExt, GenStream, Resume};
+#[cfg(not(feature = "std-generators"))]
 pub use crate::core::{Generator, GeneratorState};
 pub use crate::sync::{GenIter, GeneratorExt};
 pub use crate::token::GeneratorToken;

@@ -45,10 +45,10 @@ where
         let mut context = Context::from_waker(&waker);
         match future.poll(&mut context) {
             Poll::Pending => match arg.take_yield() {
-                Some(value) => Poll::Ready(GeneratorState::Yield(value)),
+                Some(value) => Poll::Ready(GeneratorState::Yielded(value)),
                 None => Poll::Pending,
             },
-            Poll::Ready(value) => Poll::Ready(GeneratorState::Return(value)),
+            Poll::Ready(value) => Poll::Ready(GeneratorState::Complete(value)),
         }
     }
 

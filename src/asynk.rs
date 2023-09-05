@@ -46,8 +46,8 @@ where
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let gen = unsafe { self.map_unchecked_mut(|s| &mut s.0) };
         gen.poll_resume(cx, Some(())).map(|state| match state {
-            GeneratorState::Yield(value) => Some(value),
-            GeneratorState::Return(()) => None,
+            GeneratorState::Yielded(value) => Some(value),
+            GeneratorState::Complete(()) => None,
         })
     }
 }

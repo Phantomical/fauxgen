@@ -20,5 +20,5 @@ where
 #[should_panic]
 async fn nested_gens() {
     let mut gen = std::pin::pin!(outer());
-    while let GeneratorState::Yield(_) = gen.as_mut().resume(()).await {}
+    while let GeneratorState::Yielded(_) = gen.as_mut().resume(()).await {}
 }
