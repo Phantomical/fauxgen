@@ -40,6 +40,9 @@ pub(crate) fn waker_into_parts(waker: &RawWaker) -> RawWakerParts {
     static TEST_VTABLE: RawWakerVTable =
         RawWakerVTable::new(crate::detail::waker::noop_clone, drop, drop, drop);
 
+    // We don't know the ordering that rustc has chosen for the fields in RawWaker
+    // but we do know that it contains exactly two pointers. By transmuting a known
+    // RawWaker we can check whether the fields are in the order we expect.
     fn needs_swap() -> bool {
         let waker = RawWaker::new(std::ptr::null(), &TEST_VTABLE);
         let parts = do_transmute(&waker, false);
