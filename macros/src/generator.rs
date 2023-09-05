@@ -110,6 +110,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         /// Yield a value from this generator.
         #[allow(unused_macros)]
         macro_rules! #yield_ident {
+            ()            => { #yield_ident!(()) };
             ($value:expr) => { #yield_macro_body }
         }
 
@@ -209,7 +210,7 @@ impl VisitMut for ExpandYield<'_> {
     }
 
     fn visit_expr_macro_mut(&mut self, i: &mut syn::ExprMacro) {
-        self.visit_token_stream(i.mac.tokens.clone())        
+        self.visit_token_stream(i.mac.tokens.clone())
     }
 
     fn visit_stmt_macro_mut(&mut self, i: &mut syn::StmtMacro) {
