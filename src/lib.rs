@@ -1,7 +1,5 @@
 #![cfg_attr(nightly, feature(waker_getters, generator_trait))]
 
-use std::future::Future;
-
 #[cfg(not(nightly))]
 mod core;
 
@@ -65,37 +63,3 @@ pub use crate::core::{Generator, GeneratorState};
 pub use crate::iter::GeneratorIter;
 pub use crate::stream::GeneratorStream;
 pub use crate::token::GeneratorToken;
-
-pub fn gen<Fn, Fut, Y, A>(
-    func: Fn,
-) -> export::SyncGenerator<impl Future<Output = Fut::Output>, Y, A>
-where
-    Fn: for<'t> FnOnce(GeneratorToken<'t, Y, A>) -> Fut,
-    Fut: Future,
-{
-    export::SyncGenerator::new(async move {
-        let token = std::pin::pin!(crate::detail::RawGeneratorToken::new());
-        // SAFETY: We know the types match here because we control both sides of the
-        //         generator context.
-        let token: GeneratorToken<Y, A> = unsafe { GeneratorToken::register(token.as_ref()).await };
-
-        func(token).await
-    })
-}
-
-pub fn gen_async<Fn, Fut, Y, A>(
-    func: Fn,
-) -> export::AsyncGenerator<impl Future<Output = Fut::Output>, Y, A>
-where
-    Fn: for<'t> FnOnce(GeneratorToken<'t, Y, A>) -> Fut,
-    Fut: Future,
-{
-    export::AsyncGenerator::new(async move {
-        let token = std::pin::pin!(crate::detail::RawGeneratorToken::new());
-        // SAFETY: We know the types match here because we control both sides of the
-        //         generator context.
-        let token: GeneratorToken<Y, A> = unsafe { GeneratorToken::register(token.as_ref()).await };
-
-        func(token).await
-    })
-}
