@@ -1,0 +1,11 @@
+error: use of deprecated function `_::warning`: `yield` expressions in macros are not expanded by fauxgen
+  --> tests/ui/nightly/fail-yield-in-macro-expr.rs:10:20
+   |
+10 |     let _ = delay!(yield);
+   |                    ^^^^^
+   |
+note: the lint level is defined here
+  --> tests/ui/nightly/fail-yield-in-macro-expr.rs:2:9
+   |
+2  | #![deny(deprecated)]
+   |         ^^^^^^^^^^

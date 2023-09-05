@@ -1,4 +1,6 @@
-use proc_macro2::{Span, TokenStream};
+use std::borrow::Cow;
+
+use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
@@ -6,6 +8,37 @@ use syn::Result;
 
 use crate::args::Args;
 use crate::lifetime::CollectLifetimes;
+
+struct Warning {
+    span: Span,
+    message: Cow<'static, str>,
+}
+
+impl ToTokens for Warning {
+    fn to_token_stream(&self) -> TokenStream {
+        let message = syn::LitStr::new(&self.message, self.span);
+
+        quote::quote_spanned! { self.span =>
+            const _: () = {
+                #[deprecated = #message]
+                const fn warning() {}
+
+                warning()
+            };
+        }
+    }
+
+    fn into_token_stream(self) -> TokenStream
+    where
+        Self: Sized,
+    {
+        self.to_token_stream()
+    }
+
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(self.to_token_stream())
+    }
+}
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let mut func: syn::ItemFn = syn::parse2(item)?;
@@ -37,7 +70,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let yield_ident = syn::Ident::new_raw("yield", Span::call_site());
     let argument_ident = syn::Ident::new("argument", Span::call_site());
 
-    expand_yield(&token, &mut func.block);
+    let mut warnings = Vec::new();
+    expand_yield(&token, &mut warnings, &mut func.block);
     transform_sig(
         &mut func.sig,
         &mut yield_ty,
@@ -108,20 +142,51 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         });
     }
 
-    Ok(func.to_token_stream())
+    Ok(quote::quote! {
+        #( #warnings )*
+
+        #func
+    })
 }
 
-struct ExpandYield {
+struct ExpandYield<'w> {
     token: syn::Ident,
+    warnings: &'w mut Vec<Warning>,
 }
 
-impl ExpandYield {
-    fn new(name: syn::Ident) -> Self {
-        Self { token: name }
+impl<'w> ExpandYield<'w> {
+    fn new(name: syn::Ident, warnings: &'w mut Vec<Warning>) -> Self {
+        Self {
+            token: name,
+            warnings,
+        }
+    }
+
+    fn visit_token_stream(&mut self, stream: TokenStream) {
+        for tree in stream.into_iter() {
+            self.visit_token_tree(&tree);
+        }
+    }
+
+    fn visit_token_tree(&mut self, t: &TokenTree) {
+        match t {
+            TokenTree::Group(group) => self.visit_token_stream(group.stream()),
+            TokenTree::Ident(ident) => self.visit_ident(ident),
+            _ => (),
+        }
+    }
+
+    fn visit_ident(&mut self, ident: &syn::Ident) {
+        if let Ok(token) = syn::parse2::<syn::token::Yield>(ident.to_token_stream()) {
+            self.warnings.push(Warning {
+                span: token.span,
+                message: "`yield` expressions in macros are not expanded by fauxgen".into(),
+            })
+        }
     }
 }
 
-impl VisitMut for ExpandYield {
+impl VisitMut for ExpandYield<'_> {
     fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
         match i {
             syn::Expr::Yield(y) => {
@@ -129,7 +194,7 @@ impl VisitMut for ExpandYield {
                 let attrs = &y.attrs;
                 let expr = match &y.expr {
                     Some(expr) => expr.clone(),
-                    None => syn::parse_quote_spanned! { y.yield_token.span => () }
+                    None => syn::parse_quote_spanned! { y.yield_token.span => () },
                 };
                 *i = syn::parse_quote_spanned!( y.yield_token.span =>
                     #( #attrs )*
@@ -143,10 +208,12 @@ impl VisitMut for ExpandYield {
         }
     }
 
-    fn visit_expr_yield_mut(&mut self, i: &mut syn::ExprYield) {
-        if let Some(expr) = &mut i.expr {
-            self.visit_expr_mut(expr);
-        }
+    fn visit_expr_macro_mut(&mut self, i: &mut syn::ExprMacro) {
+        self.visit_token_stream(i.mac.tokens.clone())        
+    }
+
+    fn visit_stmt_macro_mut(&mut self, i: &mut syn::StmtMacro) {
+        self.visit_token_stream(i.mac.tokens.clone())
     }
 }
 
@@ -272,8 +339,8 @@ fn transform_sig(
 }
 
 /// Replaces all instances of `yield $expr` in a block with `r#yield!($expr)`.
-fn expand_yield(macro_token: &syn::Ident, block: &mut syn::Block) {
-    ExpandYield::new(macro_token.clone()).visit_block_mut(block);
+fn expand_yield(macro_token: &syn::Ident, warnings: &mut Vec<Warning>, block: &mut syn::Block) {
+    ExpandYield::new(macro_token.clone(), warnings).visit_block_mut(block);
 }
 
 fn where_clause_or_default(clause: &mut Option<syn::WhereClause>) -> &mut syn::WhereClause {
