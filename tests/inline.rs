@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 
 #[test]
 fn basic_sync() {
-    let gen = std::pin::pin!(gen!(|token: GeneratorToken<_>| async move {
+    let gen = std::pin::pin!(gen!(|token: GeneratorToken<_>| {
         token.yield_(32).await;
         token.yield_(5).await;
     }));
@@ -16,7 +16,7 @@ fn basic_sync() {
 
 #[tokio::test]
 async fn basic_async() {
-    let mut gen = std::pin::pin!(gen!(async |token: GeneratorToken<_>| async move {
+    let mut gen = std::pin::pin!(gen!(async |token: GeneratorToken<_>| {
         tokio::time::sleep(Duration::from_millis(100)).await;
         token.yield_(888).await;
     }));

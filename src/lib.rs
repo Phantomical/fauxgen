@@ -243,23 +243,78 @@ pub use crate::iter::GeneratorIter;
 pub use crate::stream::GeneratorStream;
 pub use crate::token::GeneratorToken;
 
+/// Declare an inline generator function.
+///
+/// This is a declarative version of the [`generator`] macro. It can be used to
+/// declare a generator inline without giving it a named function.
+///
+/// Unlike with the [`generator`] macro, this generator type instead takes in a
+/// [`GeneratorToken`] which is used to yield values and to access generator
+/// arguments.
+///
+/// # Example
+/// The simplest type of generator is one which only yields values:
+/// ```
+/// use fauxgen::{gen, GeneratorToken};
+///
+/// let gen = gen!(|token: GeneratorToken<_>| {
+///     token.yield_(5i32).await;
+///     token.yield_(6).await;
+///     token.yield_(77).await;
+/// });
+/// let gen = std::pin::pin!(gen);
+///
+/// let vals: Vec<i32> = gen.collect();
+/// assert_eq!(vals, [5, 6, 77]);
+/// ```
+///
+/// # Interface
+/// The interface exposed here is similar, in principle, to that offered by the
+/// [`generator`] macro. You can await upon the methods exposed by the
+/// [`GeneratorToken`] in order to both yield a value as well as to get the
+/// first generator argument.
+///
+/// See the documentation of the [`generator`] macro for a description of what
+/// each one does.
+///
+/// # Restrictions
+/// This macro allows you to use await within the generator. However, it is an
+/// error to do this unless the generator is async. Awaiting on a future other
+/// than those gotten by calling methods on the [`GeneratorToken`] will result
+/// in a panic for sync generators.
+#[cfg(doc)]
 #[macro_export]
 macro_rules! gen {
-    (async $func:expr) => { gen!(impl(gen_async) $func) };
-    (      $func:expr) => { gen!(impl(gen_sync)  $func) };
+    (async $(move)? $func:expr) => {};
+    (      $(move)? $func:expr) => {};
+}
 
-    (impl($genfn:ident) $func:expr) => {{
-        let func = $func;
+/// Declare an inline generator function.
+#[cfg(not(doc))]
+#[macro_export]
+macro_rules! gen {
+    (async $(move $($dummy:tt)?)? |$token:ident$( : $ty:ty)?| $body:expr) => {{
+        let func = $(move $($dummy)?)? |$token $( : $ty)?| async move { $body };
+        $crate::gen_impl!(gen_async => func)
+    }};
+    ($(move $($dummy:tt)?)? |$token:ident$( : $ty:ty)?| $body:expr) => {{
+        let func = $(move $($dummy)?)? |$token $( : $ty)?| async move { $body };
+        $crate::gen_impl!(gen_sync => func)
+    }};
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! gen_impl {
+    ($genfn:ident => $func:expr) => {{
         let token = $crate::__private::token();
 
-        $crate::__private::$genfn(
-            token.marker(),
-            async move {
-                let token: $crate::GeneratorToken<_, _> = $crate::__private::register_owned(token).await;
-                func(token).await
-            }
-        )
-    }}
+        $crate::__private::$genfn(token.marker(), async move {
+            let token: $crate::GeneratorToken<_, _> =
+                $crate::__private::register_owned(token).await;
+            $func(token).await
+        })
+    }};
 }
 
 #[doc(hidden)]
