@@ -9,7 +9,6 @@ std-generators = []
 [dependencies]
 futures-core = "0.3.28"
 fauxgen-macros = { path = "macros" }
-pin-project = "1.1.0"
 
 [workspace]
 members = [
