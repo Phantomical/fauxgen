@@ -321,7 +321,7 @@ fn transform_sig(
 
     if sig.asyncness.is_none() {
         sig.output = syn::parse_quote!(
-            -> #krate::export::SyncGenerator<
+            -> #krate::__private::SyncGenerator<
                 impl #krate::__private::Future<Output = #return_ty> #gen_bound,
                 #yield_ty,
                 #arg_ty,
@@ -329,7 +329,7 @@ fn transform_sig(
         );
     } else {
         sig.output = syn::parse_quote!(
-            -> #krate::export::AsyncGenerator<
+            -> #krate::__private::AsyncGenerator<
                 impl #krate::__private::Future<Output = #return_ty> #gen_bound,
                 #yield_ty,
                 #arg_ty,

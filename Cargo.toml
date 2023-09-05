@@ -11,9 +11,7 @@ edition = "2021"
 
 [features]
 default = [ "macros" ]
-
 macros = [ "dep:fauxgen-macros" ]
-std-generators = []
 
 [dependencies]
 futures-core = "0.3"
