@@ -4,9 +4,7 @@ use std::task::{Context, Poll};
 
 use futures_core::Stream;
 
-use crate::common::GeneratorArg;
-use crate::waker::GeneratorWaker;
-use crate::{GeneratorState, TokenId};
+use crate::GeneratorState;
 
 pub trait AsyncGenerator<A = ()> {
     type Yield;
@@ -17,19 +15,16 @@ pub trait AsyncGenerator<A = ()> {
         cx: &mut Context<'_>,
         arg: Option<A>,
     ) -> Poll<GeneratorState<Self::Yield, Self::Return>>;
-}
 
-pub trait AsyncGeneratorExt<A = ()>: AsyncGenerator<A> {
-    fn resume(self: Pin<&mut Self>, arg: A) -> Resume<A, Self>
-    where
-        Self: Sized,
-    {
+    fn resume(self: Pin<&mut Self>, arg: A) -> Resume<A, Self> {
         Resume {
             arg: Some(arg),
             gen: self,
         }
     }
+}
 
+pub trait AsyncGeneratorExt<A = ()>: AsyncGenerator<A> {
     fn stream(self) -> GenStream<Self>
     where
         Self: Sized,
@@ -39,61 +34,6 @@ pub trait AsyncGeneratorExt<A = ()>: AsyncGenerator<A> {
 }
 
 impl<A, G> AsyncGeneratorExt<A> for G where G: AsyncGenerator<A> {}
-
-pub struct GeneratorWrapper<F, Y, A> {
-    future: F,
-    arg: GeneratorArg<Y, A>,
-    id: TokenId,
-}
-
-impl<F, Y, A> GeneratorWrapper<F, Y, A> {
-    pub fn new(future: F) -> Self {
-        Self {
-            future,
-            arg: GeneratorArg::Empty,
-            id: std::ptr::null(),
-        }
-    }
-}
-
-impl<F, Y, A> AsyncGenerator<A> for GeneratorWrapper<F, Y, A>
-where
-    F: Future,
-{
-    type Yield = Y;
-    type Return = F::Output;
-
-    fn poll_resume(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        param: Option<A>,
-    ) -> Poll<GeneratorState<Self::Yield, Self::Return>> {
-        // Manual pin projection
-        let this = unsafe { self.get_unchecked_mut() };
-        let arg = &mut this.arg;
-        let future = unsafe { Pin::new_unchecked(&mut this.future) };
-
-        if let Some(param) = param {
-            *arg = GeneratorArg::Arg(param);
-        }
-
-        // SAFETY: GeneratorWaker's clone impl returns a different waker so none of the
-        //         references stored in waker will outlive this function.
-        let waker = unsafe { GeneratorWaker::new(Some(cx.waker()), arg, &mut this.id) };
-
-        // SAFETY: waker will not outlive this function.
-        let waker = unsafe { waker.to_waker() };
-
-        let mut context = Context::from_waker(&waker);
-        match future.poll(&mut context) {
-            Poll::Pending => match arg.take_yield() {
-                Some(value) => Poll::Ready(GeneratorState::Yield(value)),
-                None => Poll::Pending,
-            },
-            Poll::Ready(value) => Poll::Ready(GeneratorState::Return(value)),
-        }
-    }
-}
 
 pub struct GenStream<G>(G);
 
@@ -112,14 +52,14 @@ where
     }
 }
 
-pub struct Resume<'g, A, G> {
+pub struct Resume<'g, A, G: ?Sized> {
     gen: Pin<&'g mut G>,
     arg: Option<A>,
 }
 
 impl<'g, A, G> Future for Resume<'g, A, G>
 where
-    G: AsyncGenerator<A>,
+    G: AsyncGenerator<A> + ?Sized,
 {
     type Output = GeneratorState<G::Yield, G::Return>;
 
@@ -129,4 +69,4 @@ where
     }
 }
 
-impl<'g, A, G> Unpin for Resume<'g, A, G> {}
+impl<'g, A, G: ?Sized> Unpin for Resume<'g, A, G> {}

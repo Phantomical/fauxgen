@@ -3,6 +3,9 @@ name = "fakerator"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+std-generators = []
+
 [dependencies]
 futures-core = "0.3.28"
 fakerator-macros = { path = "macros" }

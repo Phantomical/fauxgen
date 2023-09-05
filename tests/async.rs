@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use fakerator::{generator, AsyncGeneratorExt};
+use fakerator::generator;
 
 #[generator(yield = u32, arg = u32)]
 async fn delay(start: u32) {

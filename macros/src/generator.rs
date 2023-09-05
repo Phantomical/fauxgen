@@ -36,37 +36,44 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let block = func.block;
 
     let prelude = quote::quote! {
-        let mut #token: #krate::detail::GeneratorToken<#yield_ty, #arg_ty> = #krate::detail::GeneratorToken::new();
-        let #token = ::core::pin::pin!(#token);
-        #token.as_ref().register().await;
+        let #token = ::core::pin::pin!(#krate::__private::token::<#yield_ty, #arg_ty>());
+        let #token = #krate::__private::register(#token.as_ref()).await;
 
         // Most people won't see this but it will show up in rust-analyzer.
         /// Yield a value from this generator.
         #[allow(unused_macros)]
         macro_rules! #macro_ident { 
-            ($value:expr) => { #token.as_ref().do_yield($value).await } 
+            ($value:expr) => { #token.yield_($value).await } 
         }
     };
 
     if func.sig.asyncness.is_some() {
         func.sig.asyncness = None;
         func.sig.output = syn::parse_quote!(
-            -> impl #krate::AsyncGenerator<#arg_ty, Yield = #yield_ty, Return = #return_ty>
+            -> #krate::export::AsyncGenerator<
+                impl #krate::__private::Future<Output = #return_ty>,
+                #yield_ty,
+                #arg_ty
+            >
         );
 
         func.block = syn::parse_quote!({
-            #krate::detail::AsyncGeneratorWrapper::new(async move {
+            #krate::__private::gen_async(async move {
                 #prelude
                 #block
             })
         });
     } else {
         func.sig.output = syn::parse_quote!(
-            -> impl #krate::Generator<#arg_ty, Yield = #yield_ty, Return = #return_ty>
+            -> #krate::export::SyncGenerator<
+                impl #krate::__private::Future<Output = #return_ty>,
+                #yield_ty,
+                #arg_ty
+            >
         );
 
         func.block = syn::parse_quote!({
-            #krate::detail::SyncGeneratorWrapper::new(async move {
+            #krate::__private::gen_sync(async move {
                 #prelude
                 #block
             })
