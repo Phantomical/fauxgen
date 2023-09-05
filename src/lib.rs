@@ -7,7 +7,6 @@ mod core;
 mod asynk;
 mod detail;
 mod impls;
-mod noop;
 mod sync;
 mod token;
 mod util;

@@ -70,7 +70,7 @@ impl GeneratorWaker {
     fn clone_waker(&self) -> RawWaker {
         match self.waker() {
             Some(waker) => crate::util::waker_into_raw(waker.clone()),
-            None => crate::noop::raw_waker(),
+            None => noop_waker(),
         }
     }
 
@@ -112,3 +112,13 @@ unsafe fn waker_wake_by_ref(ptr: *const ()) {
 
 static GENERATOR_WAKER_VTABLE: RawWakerVTable =
     RawWakerVTable::new(waker_clone, waker_wake_by_ref, waker_wake_by_ref, drop);
+
+static NOOP_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(noop_clone, drop, drop, drop);
+
+pub(crate) unsafe fn noop_clone(_: *const ()) -> RawWaker {
+    noop_waker()
+}
+
+pub(crate) fn noop_waker() -> RawWaker {
+    RawWaker::new(std::ptr::null(), &NOOP_WAKER_VTABLE)
+}
