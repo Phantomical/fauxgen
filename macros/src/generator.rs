@@ -4,6 +4,7 @@ use syn::visit_mut::{self, VisitMut};
 use syn::Result;
 
 use crate::args::Args;
+use crate::lifetime::CollectLifetimes;
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let mut func: syn::ItemFn = syn::parse2(item)?;
@@ -21,7 +22,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         Some(ty) => ty.value,
         None => syn::parse_quote!(()),
     };
-    let return_ty = match func.sig.output {
+    let return_ty = match std::mem::replace(&mut func.sig.output, syn::ReturnType::Default) {
         syn::ReturnType::Default => syn::parse_quote!(()),
         syn::ReturnType::Type(_, ty) => ty,
     };
@@ -34,13 +35,13 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let token = syn::Ident::new("__token", Span::mixed_site());
     let macro_ident = syn::Ident::new_raw("yield", Span::call_site());
 
-    ExpandYield::new(macro_ident.clone()).visit_block_mut(&mut func.block);
+    expand_yield(&macro_ident, &mut func.block);
+    transform_sig(&mut func.sig, &yield_ty, &arg_ty, &return_ty, &krate);
+
     let block = func.block;
 
-    let token_decl = quote::quote! {
-        let #token = #krate::__private::token();
-    };
     let prelude = quote::quote! {
+        let #token = #krate::__private::token::<#yield_ty, #arg_ty>();
         let #token = #krate::__private::pin!(#token);
         let #token = #token.as_ref();
         #krate::__private::register(#token).await;
@@ -64,9 +65,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
-            #token_decl
             #krate::__private::gen_async(
-                #token.marker(),
+                #krate::__private::TokenMarker::new(),
                 async move {
                     #prelude
                     #block
@@ -83,9 +83,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
-            #token_decl
             #krate::__private::gen_sync(
-                #token.marker(),
+                #krate::__private::TokenMarker::new(),
                 async move {
                     #prelude
                     #block
@@ -140,4 +139,134 @@ impl VisitMut for ExpandYield {
             self.visit_expr_mut(expr);
         }
     }
+}
+
+/// Input:
+/// ```ignore
+/// #[generator(yield = A, arg = B)]
+/// async? fn some_fn<'a, T>(self, x: &'a T, y: &u32) -> Ret;
+/// ```
+///
+/// Output:
+/// ```ignore
+/// fn some_fn<'a, 'life2, 'gen>(self, x: &'a T, y: &'life2 u32) ->
+///     (Sync|Async)Generator<impl Future<Output = Ret> + 'gen, A, B>
+/// where
+///     'a: 'gen,
+///     'life2: 'gen,
+///     T: 'gen,
+///     Self: 'gen;
+/// ```
+fn transform_sig(
+    sig: &mut syn::Signature,
+    yield_ty: &syn::Type,
+    arg_ty: &syn::Type,
+    return_ty: &syn::Type,
+    krate: &syn::Path,
+) {
+    use std::mem;
+
+    let gen_lt: syn::Lifetime = syn::parse_quote_spanned! {
+        sig.ident.span() => 'gen
+    };
+    let gen_lt = &gen_lt;
+    let mut needs_gen = false;
+    let mut has_receiver = false;
+
+    let mut lifetimes = CollectLifetimes::default();
+    for arg in sig.inputs.iter_mut() {
+        has_receiver |= matches!(arg, syn::FnArg::Receiver(_));
+
+        lifetimes.visit_fn_arg_mut(arg)
+    }
+
+    for param in &mut sig.generics.params {
+        match param {
+            syn::GenericParam::Type(param) => {
+                let span = param
+                    .colon_token
+                    .take()
+                    .map(|token| token.span)
+                    .unwrap_or_else(|| param.ident.span());
+                let bounds = mem::take(&mut param.bounds);
+                where_clause_or_default(&mut sig.generics.where_clause)
+                    .predicates
+                    .push(syn::parse_quote_spanned! { span => #param: #gen_lt + #bounds });
+                needs_gen = true;
+            }
+            syn::GenericParam::Lifetime(param) => {
+                let span = param
+                    .colon_token
+                    .take()
+                    .map(|token| token.span)
+                    .unwrap_or_else(|| param.lifetime.span());
+                let bounds = mem::take(&mut param.bounds);
+                where_clause_or_default(&mut sig.generics.where_clause)
+                    .predicates
+                    .push(syn::parse_quote_spanned! { span => #param: #gen_lt + #bounds });
+                needs_gen = true;
+            }
+            syn::GenericParam::Const(_) => (),
+        }
+    }
+
+    if sig.generics.lt_token.is_none() {
+        sig.generics.lt_token = Some(syn::Token![<](sig.ident.span()));
+    }
+    if sig.generics.gt_token.is_none() {
+        sig.generics.gt_token = Some(syn::Token![>](sig.paren_token.span.join()));
+    }
+
+    for elided in lifetimes.elided.iter() {
+        sig.generics.params.push(syn::parse_quote!(#elided));
+        where_clause_or_default(&mut sig.generics.where_clause)
+            .predicates
+            .push(syn::parse_quote_spanned!(elided.span()=> #elided: 'async_trait));
+    }
+
+    let gen_bound = if needs_gen {
+        if has_receiver {
+            where_clause_or_default(&mut sig.generics.where_clause)
+                .predicates
+                .push(syn::parse_quote!( Self: #gen_lt ));
+        }
+
+        sig.generics.params.push(syn::parse_quote!(#gen_lt));
+
+        quote::quote!(+ #gen_lt)
+    } else {
+        TokenStream::new()
+    };
+
+    if sig.asyncness.is_none() {
+        sig.output = syn::parse_quote!(
+            -> #krate::export::SyncGenerator<
+                impl #krate::__private::Future<Output = #return_ty> #gen_bound,
+                #yield_ty,
+                #arg_ty,
+            >
+        );
+    } else {
+        sig.output = syn::parse_quote!(
+            -> #krate::export::AsyncGenerator<
+                impl #krate::__private::Future<Output = #return_ty> #gen_bound,
+                #yield_ty,
+                #arg_ty,
+            >
+        );
+    }
+}
+
+/// Replaces all instances of `yield $expr` in a block with `r#yield!($expr)`.
+fn expand_yield(macro_token: &syn::Ident, block: &mut syn::Block) {
+    ExpandYield::new(macro_token.clone()).visit_block_mut(block);
+}
+
+fn where_clause_or_default(clause: &mut Option<syn::WhereClause>) -> &mut syn::WhereClause {
+    use syn::punctuated::Punctuated;
+
+    clause.get_or_insert_with(|| syn::WhereClause {
+        where_token: Default::default(),
+        predicates: Punctuated::new(),
+    })
 }

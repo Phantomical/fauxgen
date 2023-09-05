@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 
 mod args;
 mod generator;
+mod lifetime;
 
 #[proc_macro_attribute]
 pub fn generator(attr: TokenStream, mut item: TokenStream) -> TokenStream {
