@@ -1,0 +1,10 @@
+error[E0308]: mismatched types
+ --> tests/ui/fail/wrong-arg-type.rs:2:1
+  |
+2 | #[fauxgen::generator(arg = i32)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `i32`
+3 | fn gen() {
+4 |     let value: &str = argument!();
+  |                       ----------- in this macro invocation
+  |
+  = note: this error originates in the macro `argument` (in Nightly builds, run with -Z macro-backtrace for more info)

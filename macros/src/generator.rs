@@ -37,7 +37,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let yield_ident = syn::Ident::new_raw("yield", Span::call_site());
     let argument_ident = syn::Ident::new("argument", Span::call_site());
 
-    expand_yield(&yield_ident, &mut func.block);
+    expand_yield(&token, &mut func.block);
     transform_sig(
         &mut func.sig,
         &mut yield_ty,
@@ -112,12 +112,12 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
 }
 
 struct ExpandYield {
-    macro_name: syn::Ident,
+    token: syn::Ident,
 }
 
 impl ExpandYield {
     fn new(name: syn::Ident) -> Self {
-        Self { macro_name: name }
+        Self { token: name }
     }
 }
 
@@ -125,25 +125,16 @@ impl VisitMut for ExpandYield {
     fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
         match i {
             syn::Expr::Yield(y) => {
-                let tokens = if let Some(expr) = &mut y.expr {
-                    self.visit_expr_mut(expr);
-                    expr.to_token_stream()
-                } else {
-                    quote::quote_spanned!(y.yield_token.span => ())
+                let token = &self.token;
+                let attrs = &y.attrs;
+                let expr = match &y.expr {
+                    Some(expr) => expr.clone(),
+                    None => syn::parse_quote_spanned! { y.yield_token.span => () }
                 };
-
-                let name = &self.macro_name;
-                *i = syn::Expr::Macro(syn::ExprMacro {
-                    attrs: std::mem::take(&mut y.attrs),
-                    mac: syn::Macro {
-                        path: syn::parse_quote!(#name),
-                        bang_token: syn::Token![!](y.yield_token.span),
-                        delimiter: syn::MacroDelimiter::Paren(syn::token::Paren(
-                            y.yield_token.span,
-                        )),
-                        tokens,
-                    },
-                });
+                *i = syn::parse_quote_spanned!( y.yield_token.span =>
+                    #( #attrs )*
+                    #token.yield_(#expr).await
+                );
             }
             // Don't recurse into closures. They are a different function and may actually be a rust
             // generator.

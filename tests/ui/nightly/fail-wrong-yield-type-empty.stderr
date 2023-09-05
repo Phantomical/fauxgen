@@ -1,11 +1,11 @@
 error[E0308]: mismatched types
  --> tests/ui/nightly/fail-wrong-yield-type-empty.rs:5:5
   |
-3 | #[fauxgen::generator(yield = i32)]
-  |                      ----------- arguments to this method are incorrect
-4 | fn gen() {
 5 |     yield;
-  |     ^^^^^ expected `i32`, found `()`
+  |     ^^^^^
+  |     |
+  |     expected `i32`, found `()`
+  |     arguments to this method are incorrect
   |
 help: the return type of this call is `()` due to the type of the argument passed
    --> tests/ui/nightly/fail-wrong-yield-type-empty.rs:3:1
@@ -20,4 +20,4 @@ note: method defined here
     |
     |     pub async fn yield_(self: Pin<&Self>, value: Y) -> A {
     |                  ^^^^^^
-    = note: this error originates in the macro `yield` (in Nightly builds, run with -Z macro-backtrace for more info)
+    = note: this error originates in the attribute macro `fauxgen::generator` (in Nightly builds, run with -Z macro-backtrace for more info)
