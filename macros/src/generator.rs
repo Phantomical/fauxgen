@@ -36,7 +36,13 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let macro_ident = syn::Ident::new_raw("yield", Span::call_site());
 
     expand_yield(&macro_ident, &mut func.block);
-    transform_sig(&mut func.sig, &mut yield_ty, &mut arg_ty, &mut return_ty, &krate);
+    transform_sig(
+        &mut func.sig,
+        &mut yield_ty,
+        &mut arg_ty,
+        &mut return_ty,
+        &krate,
+    );
 
     let block = func.block;
 
@@ -130,6 +136,9 @@ impl VisitMut for ExpandYield {
                     },
                 });
             }
+            // Don't recurse into closures. They are a different function and may actually be a rust
+            // generator.
+            syn::Expr::Closure(_) => (),
             _ => visit_mut::visit_expr_mut(self, i),
         }
     }
