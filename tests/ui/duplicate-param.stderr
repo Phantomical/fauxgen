@@ -1,0 +1,5 @@
+error: argument `yield` specified multiple times
+ --> tests/ui/duplicate-param.rs:3:26
+  |
+3 | #[generator(yield = u32, yield = u64)]
+  |                          ^^^^^
