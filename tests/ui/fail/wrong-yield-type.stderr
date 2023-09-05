@@ -2,25 +2,25 @@ error[E0308]: mismatched types
  --> tests/ui/fail/wrong-yield-type.rs:4:14
   |
 2 | #[fauxgen::generator(yield = i32)]
-  |                      ----------- arguments to this method are incorrect
+  |                      ----- arguments to this method are incorrect
 3 | fn gen() {
 4 |     r#yield!("test");
   |              ^^^^^^ expected `i32`, found `&str`
   |
 help: the return type of this call is `&'static str` due to the type of the argument passed
-   --> tests/ui/fail/wrong-yield-type.rs:2:1
-    |
-2   | #[fauxgen::generator(yield = i32)]
-    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-3   | fn gen() {
-4   |     r#yield!("test");
-    |     ----------------
-    |     |        |
-    |     |        this argument influences the return type of `yield_`
-    |     in this macro invocation
+ --> tests/ui/fail/wrong-yield-type.rs:2:1
+  |
+2 | #[fauxgen::generator(yield = i32)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3 | fn gen() {
+4 |     r#yield!("test");
+  |     ----------------
+  |     |        |
+  |     |        this argument influences the return type of `yield_`
+  |     in this macro invocation
 note: method defined here
-   --> src/detail/token.rs
-    |
-    |     pub async fn yield_(self: Pin<&Self>, value: Y) -> A {
-    |                  ^^^^^^
-    = note: this error originates in the macro `yield` (in Nightly builds, run with -Z macro-backtrace for more info)
+ --> src/detail/token.rs
+  |
+  |     pub async fn yield_(self: Pin<&Self>, value: Y) -> A {
+  |                  ^^^^^^
+  = note: this error originates in the macro `yield` (in Nightly builds, run with -Z macro-backtrace for more info)
