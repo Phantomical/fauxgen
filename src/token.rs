@@ -5,7 +5,7 @@ use crate::detail::RawGeneratorToken;
 /// A generator token ties together the executor and the generator itself.
 ///
 /// It is what allows us to yield values back out of the generator.
-pub struct GeneratorToken<'t, Y, A>(Pin<&'t RawGeneratorToken<Y, A>>);
+pub struct GeneratorToken<'t, Y, A = ()>(Pin<&'t RawGeneratorToken<Y, A>>);
 
 impl<'t, Y, A> GeneratorToken<'t, Y, A> {
     /// Create a new GeneratorToken by registering this one.

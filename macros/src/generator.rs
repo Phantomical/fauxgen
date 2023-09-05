@@ -36,7 +36,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
     let block = func.block;
 
     let prelude = quote::quote! {
-        let #token = ::core::pin::pin!(#krate::__private::token::<#yield_ty, #arg_ty>());
+        let #token = #krate::__private::token::<#yield_ty, #arg_ty>();
+        let #token = #krate::__private::pin!(#token);
         let #token = #krate::__private::register(#token.as_ref()).await;
 
         // Most people won't see this but it will show up in rust-analyzer.
@@ -59,10 +60,12 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
-            #krate::__private::gen_async(async move {
-                #prelude
-                #block
-            })
+            #krate::__private::gen_async(
+                async move {
+                    #prelude
+                    #block
+                }
+            )
         });
     } else {
         func.sig.output = syn::parse_quote!(
@@ -74,10 +77,12 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> Result<TokenStream> {
         );
 
         func.block = syn::parse_quote!({
-            #krate::__private::gen_sync(async move {
-                #prelude
-                #block
-            })
+            #krate::__private::gen_sync(
+                async move {
+                    #prelude
+                    #block
+                }
+            )
         });
     }
 

@@ -1,3 +1,5 @@
+//! Generators on stable rust.
+
 #![cfg_attr(nightly, feature(waker_getters))]
 #![cfg_attr(feature = "std-generators", feature(generator_trait))]
 
