@@ -19,7 +19,6 @@ impl TokenId {
         Self(std::ptr::null())
     }
 
-    // This shoud
     fn new(value: *const ()) -> Self {
         Self(value)
     }
@@ -28,6 +27,9 @@ impl TokenId {
         !self.0.is_null()
     }
 }
+
+unsafe impl Send for TokenId {}
+unsafe impl Sync for TokenId {}
 
 /// Marker type used to ensure that the generator wrapper and the generator
 /// token share the same yield and argument types.
