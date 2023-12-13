@@ -1,4 +1,4 @@
-#![feature(generators, generator_trait)]
+#![feature(coroutines, generator_trait)]
 #![deny(deprecated)]
 
 macro_rules! delay {

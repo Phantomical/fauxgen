@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 type Return<'a> = &'a str;
 
 #[fauxgen::generator]
