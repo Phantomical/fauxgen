@@ -69,3 +69,9 @@ where
         })
     }
 }
+
+unsafe impl<F: Send, Y, A> Send for AsyncGenerator<F, Y, A> {}
+
+// SAFETY: We only expose &mut methods so the generator can never be accessed
+//         concurrently.
+unsafe impl<F: Send, Y, A> Sync for AsyncGenerator<F, Y, A> {}
