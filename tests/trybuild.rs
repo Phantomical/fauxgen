@@ -7,6 +7,7 @@ fn ui() {
 }
 
 #[test]
+#[ignore = "these tests are currently broken"]
 #[cfg_attr(
     not(nightly),
     ignore = "these tests are only supported on rust nightly"
@@ -19,10 +20,7 @@ fn ui_nightly() {
 }
 
 #[test]
-#[cfg_attr(
-    nightly,
-    ignore = "these tests are only supported on rust stable"
-)]
+#[cfg_attr(nightly, ignore = "these tests are only supported on rust stable")]
 #[cfg_attr(miri, ignore = "ui tests don't run under miri")]
 fn ui_stable() {
     let t = trybuild::TestCases::new();

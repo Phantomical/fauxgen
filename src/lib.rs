@@ -228,7 +228,7 @@ mod readme {}
 /// you will need to enable the nightly `generators` feature.
 #[cfg_attr(nightly, doc = "```")]
 #[cfg_attr(not(nightly), doc = "```compile_fail")]
-/// #![feature(generators)]
+/// #![feature(coroutines)]
 ///
 /// #[fauxgen::generator(yield = &'static str)]
 /// fn generator() {

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 type Arg<'a> = &'a str;
 
 #[fauxgen::generator(arg = Arg<'_>)]
