@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4]
+### Changed
+- The `AsyncGenerator` trait is now object-safe.
+
 ## [0.1.3]
 ### Changed
 - Async generators now implement `Sync` when the interior future implements `Send`.
