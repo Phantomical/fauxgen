@@ -227,7 +227,7 @@ mod readme {}
 /// macro. Note that the keyword itself is unstable in rust and to just use it
 /// you will need to enable the nightly `generators` feature.
 #[cfg_attr(nightly, doc = "```")]
-#[cfg_attr(not(nightly), doc = "```compile_fail")]
+#[cfg_attr(not(nightly), doc = "```ignore")]
 /// #![feature(coroutines)]
 ///
 /// #[fauxgen::generator(yield = &'static str)]

@@ -20,11 +20,6 @@ pub(crate) fn waker_as_raw(waker: &Waker) -> &RawWaker {
     unsafe { &*(waker as *const Waker as *const RawWaker) }
 }
 
-#[cfg(nightly)]
-pub(crate) fn waker_as_raw(waker: &Waker) -> &RawWaker {
-    waker.as_raw()
-}
-
 pub(crate) fn waker_into_raw(waker: Waker) -> RawWaker {
     // SAFETY: Waker is annotated with `#[repr(transparent)]` so this is currently
     //         safe. It is not a stable guarantee though so it may break in the
@@ -36,7 +31,7 @@ pub(crate) fn waker_into_raw(waker: Waker) -> RawWaker {
 }
 
 #[cfg(not(nightly))]
-pub(crate) fn waker_into_parts(waker: &RawWaker) -> RawWakerParts {
+pub(crate) fn waker_into_parts(waker: &Waker) -> RawWakerParts {
     static TEST_VTABLE: RawWakerVTable =
         RawWakerVTable::new(crate::detail::waker::noop_clone, drop, drop, drop);
 
@@ -79,11 +74,12 @@ pub(crate) fn waker_into_parts(waker: &RawWaker) -> RawWakerParts {
         }
     }
 
+    let waker = waker_as_raw(waker);
     do_transmute(waker, needs_swap())
 }
 
 #[cfg(nightly)]
-pub(crate) fn waker_into_parts(waker: &RawWaker) -> RawWakerParts {
+pub(crate) fn waker_into_parts(waker: &Waker) -> RawWakerParts {
     RawWakerParts {
         data: waker.data(),
         vtable: waker.vtable(),

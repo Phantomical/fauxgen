@@ -3,7 +3,7 @@ members = [
     ".",
     "macros",
 ]
-package.version = "0.1.4"
+package.version = "0.1.5"
 
 [package]
 name = "fauxgen"
@@ -24,9 +24,11 @@ exclude = [
 default = [ "macros" ]
 macros = [ "dep:fauxgen-macros" ]
 
+unstable_nightly = []
+
 [dependencies]
 futures-core = "0.3"
-fauxgen-macros = { version = "=0.1.4", path = "macros", optional = true }
+fauxgen-macros = { version = "=0.1.5", path = "macros", optional = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"
