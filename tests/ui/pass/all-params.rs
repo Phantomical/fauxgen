@@ -13,7 +13,7 @@ mod dummy {
     yield = crate::dummy::Yield,
     arg = crate::dummy::Arg
 )]
-fn gen() -> crate::dummy::Return {
+fn generator() -> crate::dummy::Return {
     "test"
 }
 

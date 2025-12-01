@@ -3,7 +3,7 @@
 type Yield<'a> = &'a str;
 
 #[fauxgen::generator(yield = Yield<'_>)]
-fn gen() {
+fn generator() {
     r#yield!("test");
 }
 

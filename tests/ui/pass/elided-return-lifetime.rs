@@ -3,7 +3,7 @@
 type Return<'a> = &'a str;
 
 #[fauxgen::generator]
-fn gen() -> Return<'_> {
+fn generator() -> Return<'_> {
     "test"
 }
 

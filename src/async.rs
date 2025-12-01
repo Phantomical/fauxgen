@@ -78,7 +78,7 @@ pub trait AsyncGenerator<A = ()> {
     /// `AsyncGenerator` are not required to do so.
     ///
     /// [`poll_resume`]: AsyncGenerator::poll_resume
-    fn resume(self: Pin<&mut Self>, arg: A) -> Resume<A, Self>
+    fn resume(self: Pin<&mut Self>, arg: A) -> Resume<'_, A, Self>
     where
         Self: Sized,
     {

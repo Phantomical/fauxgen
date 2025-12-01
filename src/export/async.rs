@@ -26,7 +26,7 @@ impl<F, Y, A> AsyncGenerator<F, Y, A>
 where
     F: Future,
 {
-    pub fn resume(self: Pin<&mut Self>, arg: A) -> Resume<A, Self> {
+    pub fn resume(self: Pin<&mut Self>, arg: A) -> Resume<'_, A, Self> {
         <Self as crate::AsyncGenerator<A>>::resume(self, arg)
     }
 }

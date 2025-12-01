@@ -43,15 +43,13 @@ impl GeneratorWaker {
     }
 
     pub fn from_waker_ref(waker: &Waker) -> Option<&Self> {
-        let parts = crate::detail::util::waker_into_parts(waker);
-
-        if parts.vtable != &GENERATOR_WAKER_VTABLE {
+        if waker.vtable() != &GENERATOR_WAKER_VTABLE {
             return None;
         }
 
         // SAFETY: We validated the vtable above so we know this points to a
         //         GeneratorWaker instance.
-        let waker = unsafe { &*(parts.data as *const Self) };
+        let waker = unsafe { &*(waker.data() as *const Self) };
 
         Some(waker)
     }

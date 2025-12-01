@@ -43,6 +43,12 @@ unsafe impl Sync for TokenId {}
 /// [`gen!`]: crate::gen!
 pub struct TokenMarker<Y, A>(PhantomData<(Y, A)>);
 
+impl<Y, A> Default for TokenMarker<Y, A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<Y, A> TokenMarker<Y, A> {
     pub const fn new() -> Self {
         Self(PhantomData)

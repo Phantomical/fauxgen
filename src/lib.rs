@@ -133,7 +133,6 @@
 //! Note that using the `argument!` macro after you have called `yield!` is
 //! likely to result in a panic.
 
-#![cfg_attr(nightly, feature(waker_getters))]
 #![cfg_attr(std_generators, feature(generator_trait))]
 
 extern crate self as fauxgen;

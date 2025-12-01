@@ -3,7 +3,7 @@
 type Arg<'a> = &'a str;
 
 #[fauxgen::generator(arg = Arg<'_>)]
-fn gen() {
+fn generator() {
     let _arg: &str = argument!();
 }
 
