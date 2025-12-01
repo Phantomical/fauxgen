@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6]
+### Changed
+- Changed to avoid hidden transmutes now that the `waker_getters` feature has
+  stablilized.
+- The crate msrv is now 1.83.
+
+### Fixed
+- Fixed compilation errors when the `macros` feature is disabled.
+
 ## [0.1.5]
 ### Fixed
 - Nightly utilites are now gated behind an `unstable_nightly` feature.
