@@ -3,8 +3,12 @@ use std::task::{Context, Poll};
 
 use futures_core::Stream;
 
-use crate::{generator, AsyncGenerator, GeneratorState};
+use crate::{AsyncGenerator, GeneratorState};
 
+#[cfg(feature = "macros")]
+use crate::generator;
+
+#[cfg(feature = "macros")]
 used_in_docs!(generator);
 
 /// Wrapper around an async generator that implements [`Stream`].
