@@ -9,7 +9,7 @@ async fn outer() {
 }
 
 #[generator(yield = u32)]
-async fn inner<F>(func: impl FnOnce() -> F + 'gen)
+async fn inner<F>(func: impl FnOnce() -> F + 'gen_)
 where
     F: Future<Output = ()>,
 {

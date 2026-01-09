@@ -226,13 +226,13 @@ impl VisitMut for ExpandYield<'_> {
 ///
 /// Output:
 /// ```ignore
-/// fn some_fn<'a, 'life2, 'gen>(self, x: &'a T, y: &'life2 u32) ->
-///     (Sync|Async)Generator<impl Future<Output = Ret> + 'gen, A, B>
+/// fn some_fn<'a, 'life2, 'gen_>(self, x: &'a T, y: &'life2 u32) ->
+///     (Sync|Async)Generator<impl Future<Output = Ret> + 'gen_, A, B>
 /// where
-///     'a: 'gen,
-///     'life2: 'gen,
-///     T: 'gen,
-///     Self: 'gen;
+///     'a: 'gen_,
+///     'life2: 'gen_,
+///     T: 'gen_,
+///     Self: 'gen_;
 /// ```
 fn transform_sig(
     sig: &mut syn::Signature,
@@ -244,7 +244,7 @@ fn transform_sig(
     use std::mem;
 
     let gen_lt: syn::Lifetime = syn::parse_quote_spanned! {
-        sig.ident.span() => 'gen
+        sig.ident.span() => 'gen_
     };
     let gen_lt = &gen_lt;
     let mut needs_gen = false;
