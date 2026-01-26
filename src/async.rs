@@ -104,7 +104,7 @@ pub struct Resume<'g, A, G: ?Sized> {
     arg: Option<A>,
 }
 
-impl<'g, A, G> Future for Resume<'g, A, G>
+impl<A, G> Future for Resume<'_, A, G>
 where
     G: AsyncGenerator<A> + ?Sized,
 {
@@ -116,4 +116,4 @@ where
     }
 }
 
-impl<'g, A, G: ?Sized> Unpin for Resume<'g, A, G> {}
+impl<A, G: ?Sized> Unpin for Resume<'_, A, G> {}

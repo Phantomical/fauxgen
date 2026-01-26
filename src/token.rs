@@ -7,7 +7,7 @@ use crate::detail::RawGeneratorToken;
 /// It is what allows us to yield values back out of the generator.
 pub struct GeneratorToken<Y, A = ()>(Pin<Box<RawGeneratorToken<Y, A>>>);
 
-impl<'t, Y, A> GeneratorToken<Y, A> {
+impl<Y, A> GeneratorToken<Y, A> {
     /// Create a new GeneratorToken by registering this one.
     ///
     /// # Safety
