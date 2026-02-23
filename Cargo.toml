@@ -4,11 +4,14 @@ members = [
     "macros",
 ]
 package.version = "0.1.6"
+package.edition = "2021"
+package.rust-version = "1.83"
 
 [package]
 name = "fauxgen"
-version = { workspace = true }
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 license = "MIT OR Apache-2.0"
 authors = [ "Sean Lynch <sean@lynches.ca>" ]
 description   = "write your own generators in stable rust"
@@ -19,7 +22,6 @@ exclude = [
     "/macros",
     "/.cargo"
 ]
-rust-version = "1.83"
 
 [features]
 default = [ "macros" ]
