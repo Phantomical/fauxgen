@@ -3,7 +3,7 @@ members = [
     ".",
     "macros",
 ]
-package.version = "0.1.6"
+package.version = "0.1.7"
 package.edition = "2021"
 package.rust-version = "1.83"
 
@@ -31,7 +31,7 @@ unstable_nightly = []
 
 [dependencies]
 futures-core = "0.3"
-fauxgen-macros = { version = "=0.1.6", path = "macros", optional = true }
+fauxgen-macros = { version = "=0.1.7", path = "macros", optional = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"
